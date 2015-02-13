@@ -1,0 +1,19 @@
+Source: ribosome
+Section: devel
+Priority: optional
+Maintainer: Evgeniy Polyakov <zbr@ioremap.net>
+Build-Depends:
+ cmake (>= 2.6),
+ debhelper (>= 7.0.50~),
+ libboost-dev,
+ libboost-system-dev,
+ libboost-locale-dev
+Standards-Version: 3.8.0
+Homepage: http://www.reverbrain.com/
+Vcs-Git: git://github.com/reverbrain/ribosome.git
+Vcs-Browser: https://github.com/reverbrain/ribosome
+
+Package: ribosome
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Ribosome is a set of utility building blocks made at Reverbrain
