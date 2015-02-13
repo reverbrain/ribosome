@@ -56,15 +56,14 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%doc AUTHORS README.rst
-%{_bindir}/*
-%{_libdir}/lib*.so.*
+#%{_bindir}/*
+#%{_libdir}/lib*.so.*
 
 
 %files devel
 %defattr(-,root,root,-)
 %{_includedir}/*
-%{_libdir}/lib*.so
+#%{_libdir}/lib*.so
 
 %changelog
 * Sat Feb 14 2015 Evgeniy Polyakov <zbr@ioremap.net> - 0.1.0
