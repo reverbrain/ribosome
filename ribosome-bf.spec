@@ -67,3 +67,6 @@ rm -rf %{buildroot}
 %{_libdir}/lib*.so
 
 %changelog
+* Sat Feb 14 2015 Evgeniy Polyakov <zbr@ioremap.net> - 0.1.0
+- Ribosome is a set of utility building blocks made at Reverbrain
+
