@@ -76,6 +76,24 @@ static int levenstein(const S &s, const S &t, int min_dist) {
 	return dist;
 }
 
+template <typename S>
+static float jaccard(const std::vector<S> &t1, const std::vector<S> &t2)
+{
+	std::set<S> s1(t1.begin(), t1.end());
+	std::set<S> s2(t2.begin(), t2.end());
+
+	int sim = 0;
+	for (auto it = s1.begin(); it != s1.end(); ++it) {
+		auto match = s2.find(*it);
+		if (match != s2.end()) {
+			sim++;
+		}
+	}
+
+	int u = s2.size() + (s1.size() - sim);
+	return 1.0 - float(sim) / u;
+}
+
 }}} // namespace ioremap::ribosome::distance
 
 #endif /* __RIBOSOME_DISTANCE_HPP */
