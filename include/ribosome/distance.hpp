@@ -18,6 +18,7 @@
 #define __RIBOSOME_DISTANCE_HPP
 
 #include <algorithm>
+#include <set>
 #include <vector>
 
 namespace ioremap { namespace ribosome { namespace distance {
