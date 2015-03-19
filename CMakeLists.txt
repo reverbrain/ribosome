@@ -12,9 +12,15 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
 find_package(Boost REQUIRED COMPONENTS system locale)
 
+find_path(EIGEN3_INCLUDE_DIRS NAMES "signature_of_eigen3_matrix_library" PATH_SUFFIXES "eigen3")
+if (NOT EIGEN3_INCLUDE_DIRS)
+	message(FATAL_ERROR "Eigen3 development files have not been found")
+endif()
+
 include_directories(
 	${PROJECT_SOURCE_DIR}/include
 	${Boost_INCLUDE_DIRS}
+	${EIGEN3_INCLUDE_DIRS}
 )
 
 link_directories(
