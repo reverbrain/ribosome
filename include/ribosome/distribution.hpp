@@ -10,8 +10,9 @@
 
 #include <math.h>
 
-namespace ioremap { namespace ribosome { namespace distribution {
+namespace ioremap { namespace ribosome {
 
+namespace distribution {
 struct gaussian {
 	gaussian(const Eigen::VectorXd &m, const Eigen::MatrixXd &s) : mu(m), sigma(s) {
 		sigma_inv = sigma.inverse();
@@ -95,38 +96,18 @@ struct gaussian {
 	double sigma_det;
 };
 
-} // namespace distribution
+}; // namespace distribution
 
-namespace filter {
-
-template <class T>
-class gaussian {
+class filter {
 public:
-	gaussian(int m, double sigma) :
-		m_filter(Eigen::VectorXd::Zero(2), Eigen::MatrixXd::Identity(2, 2) * sigma),
-		m_m(m),
-		m_apply(2*m-1, 2*m-1)
-	{
-		for (int i = 0; i < m; ++i) {
-			for (int j = 0; j < m; ++j) {
-				Eigen::Vector2d tmp(i, j);
-				double f = m_filter.f(tmp);
-				m_apply(m-1 + i, m-1 + j) = f;
-				m_apply(m-1 - i, m-1 + j) = f;
-				m_apply(m-1 + i, m-1 - j) = f;
-				m_apply(m-1 - i, m-1 - j) = f;
-			}
-		}
-
-		std::cout << "filter:\n" << m_apply << std::endl;
-	}
+	filter(const Eigen::MatrixXd &kernel) : m_kernel(kernel) {}
 
 	Eigen::MatrixXd apply(const Eigen::MatrixXd &data) {
 		Eigen::MatrixXd res(data.rows(), data.cols());
 
 		for (int i = 0; i < data.rows(); ++i) {
 			for (int j = 0; j < data.cols(); ++j) {
-				res(i, j) = block(data, i, j).cwiseProduct(m_apply).sum();
+				res(i, j) = block(data, i, j).cwiseProduct(m_kernel).sum();
 			}
 		}
 
@@ -134,27 +115,28 @@ public:
 	}
 
 private:
-	T m_filter;
-	int m_m;
-	Eigen::MatrixXd m_apply;
+	Eigen::MatrixXd m_kernel;
 
 	Eigen::MatrixXd block(const Eigen::MatrixXd &data, int i, int j) const {
-		if ((j >= m_m - 1 && j <= data.cols() - m_m) &&
-		    (i >= m_m - 1 && i <= data.rows() - m_m)) {
-			return data.block(i - (m_m - 1), j - (m_m - 1), m_apply.rows(), m_apply.cols());
+		int coff = m_kernel.cols() / 2;
+		int roff = m_kernel.rows() / 2;
+
+		if ((j >= coff && j < data.cols() - coff) &&
+		    (i >= roff && i < data.rows() - roff)) {
+			return data.block(i - roff, j - coff, m_kernel.rows(), m_kernel.cols());
 		}
 
-		Eigen::MatrixXd res = Eigen::MatrixXd::Zero(m_apply.rows(), m_apply.cols());
+		Eigen::MatrixXd res = Eigen::MatrixXd::Zero(m_kernel.rows(), m_kernel.cols());
 
-		for (int i_idx = -m_m + 1; i_idx < m_m; ++i_idx) {
+		for (int i_idx = -roff; i_idx <= roff; ++i_idx) {
 			int i_data_idx = i + i_idx;
 
-			for (int j_idx = -m_m + 1; j_idx < m_m; ++j_idx) {
+			for (int j_idx = -coff; j_idx <= coff; ++j_idx) {
 				int j_data_idx = j + j_idx;
 
 				if ((i_data_idx >= 0 && i_data_idx < data.rows()) &&
 				    (j_data_idx >= 0 && j_data_idx < data.cols())) {
-					res(i_idx + m_m - 1, j_idx + m_m - 1) = data(i_data_idx, j_data_idx);
+					res(i_idx + roff, j_idx + coff) = data(i_data_idx, j_data_idx);
 				}
 			}
 		}
@@ -163,8 +145,6 @@ private:
 	}
 
 };
-
-}
 
 }} // namespace ioremap::ribosome
 
