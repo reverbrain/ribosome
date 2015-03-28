@@ -33,8 +33,7 @@
 #include <string.h>
 
 namespace ioremap { namespace ribosome {
-
-	void iterate_directory(const std::string &base, const std::function<bool (const char *, const char *)> &fn) {
+	static inline void iterate_directory(const std::string &base, const std::function<bool (const char *, const char *)> &fn) {
 		int fd;
 		DIR *dir;
 		struct dirent64 *d;
