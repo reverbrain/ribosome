@@ -1,0 +1,10 @@
+# - Config file for the Elliptics package
+# It defines the following variables
+#  RIBOSOME_INCLUDE_DIRS - include directories for Elliptics
+#  RIBOSOME_LIBRARY_DIRS - library directories
+#  RIBOSOME_LIBRARIES    - libraries to link against
+
+get_filename_component(RIBOSOME_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+set(RIBOSOME_INCLUDE_DIRS @INSTALL_INCLUDE_DIR@)
+set(RIBOSOME_LIBRARIES "")

@@ -17,6 +17,8 @@ if (NOT EIGEN3_INCLUDE_DIRS)
 	message(FATAL_ERROR "Eigen3 development files have not been found")
 endif()
 
+configure_file(cmake/RibosomeConfig.cmake.in "${PROJECT_BINARY_DIR}/cmake/RibosomeConfig.cmake" @ONLY)
+
 include_directories(
 	${PROJECT_SOURCE_DIR}/include
 	${ICU_INCLUDE_DIRS}
@@ -32,4 +34,5 @@ add_subdirectory(src)
 FILE(GLOB headers
 	"${PROJECT_SOURCE_DIR}/include/ribosome/*.hpp"
 )
+install(FILES "${PROJECT_BINARY_DIR}/cmake/RibosomeConfig.cmake" DESTINATION share/ribosome/cmake)
 install(FILES ${headers} DESTINATION include/ribosome)
