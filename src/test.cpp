@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 	std::cout << ls << std::endl;
 
 	for (const auto &w: spl.convert_split_words(str.data(), str.size(), "")) {
-		std::cout << w << std::endl;
+		std::cout << lconvert::to_lower(w) << std::endl;
 	}
 	return 0;
 }
