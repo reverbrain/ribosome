@@ -10,7 +10,7 @@ STRING (REGEX MATCH "([0-9]+$)" WARP_VERSION_MINOR "${DEBFULLVERSION}")
 set(CMAKE_CXX_FLAGS "-g -std=c++0x -W -Wall -Wextra -fstack-protector-all")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
-find_package(Boost REQUIRED COMPONENTS system locale)
+find_package(ICU REQUIRED COMPONENTS i18n io)
 
 find_path(EIGEN3_INCLUDE_DIRS NAMES "signature_of_eigen3_matrix_library" PATH_SUFFIXES "eigen3")
 if (NOT EIGEN3_INCLUDE_DIRS)
@@ -19,15 +19,15 @@ endif()
 
 include_directories(
 	${PROJECT_SOURCE_DIR}/include
-	${Boost_INCLUDE_DIRS}
+	${ICU_INCLUDE_DIRS}
 	${EIGEN3_INCLUDE_DIRS}
 )
 
 link_directories(
-	${Boost_LIBRARY_DIRS}
+	${ICU_LIBRARY_DIRS}
 )
 
-#add_subdirectory(src)
+add_subdirectory(src)
 
 FILE(GLOB headers
 	"${PROJECT_SOURCE_DIR}/include/ribosome/*.hpp"

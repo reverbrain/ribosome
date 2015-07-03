@@ -17,20 +17,20 @@
 #ifndef __RIBOSOME_LSTRING_HPP
 #define __RIBOSOME_LSTRING_HPP
 
+#include "ribosome/charset.hpp"
+
 #include <fstream>
 #include <sstream>
 #include <string>
 
-#include <boost/locale.hpp>
-#include <boost/locale/util.hpp>
+#include <unicode/uchar.h>
+#include <unicode/ucnv.h>
+
+#include <string.h>
 
 namespace ioremap { namespace ribosome {
 
-static const boost::locale::generator __fuzzy_locale_generator;
-static const std::locale __fuzzy_locale(__fuzzy_locale_generator("en_US.UTF8"));
-static const auto __fuzzy_utf8_converter = boost::locale::util::create_utf8_converter();
-
-typedef unsigned short basic_letter;
+typedef UChar basic_letter;
 
 template <typename T>
 struct base_letter {
@@ -43,9 +43,12 @@ struct base_letter {
 	}
 
 	std::string str() const {
-		char tmp[8];
-		memset(tmp, 0, sizeof(tmp));
-		__fuzzy_utf8_converter->from_unicode(l, tmp, tmp + 8);
+		char tmp[8 + 1];
+		UErrorCode err = U_ZERO_ERROR;
+		UConverter *conv = ucnv_open("utf8", &err);
+		int len = ucnv_fromUChars(conv, tmp, sizeof(tmp) - 1, &l, 1, &err);
+		tmp[len] = '\0';
+		ucnv_close(conv);
 
 		return tmp;
 	}
@@ -160,33 +163,36 @@ typedef std::basic_string<letter, letter_traits<basic_letter>> lstring;
 
 inline std::ostream &operator <<(std::ostream &out, const lstring &ls)
 {
-	for (auto it = ls.begin(); it != ls.end(); ++it) {
-		out << *it;
-	}
+	char tmp[ls.size() * 4 + 1];
+	out << u_austrncpy(tmp, (UChar *)ls.data(), sizeof(tmp));
 	return out;
 }
 
 
 class lconvert {
 	public:
-		static lstring from_utf8(const char *text, size_t size) {
-			namespace lb = boost::locale::boundary;
-			std::string::const_iterator begin(text);
-			std::string::const_iterator end(text + size);
-
-			lb::ssegment_index wmap(lb::character, begin, end, __fuzzy_locale);
-			wmap.rule(lb::character_any);
-
+		static lstring from_string_encoding(const char *text, size_t size, const std::string &enc_hint) {
 			lstring ret;
+			ret.resize(size + 1);
+			int ret_size = ret.size();
 
-			for (auto it = wmap.begin(), e = wmap.end(); it != e; ++it) {
-				std::string str = it->str();
-				const char *ptr = str.c_str();
-				auto code = __fuzzy_utf8_converter->to_unicode(ptr, ptr + str.size());
+			charset ch;
+			ch.convert((UChar *)ret.data(), &ret_size, text, size, enc_hint);
+			ret.resize(ret_size);
+			return ret;
+		}
+		static lstring from_string_encoding(const char *text, size_t size) {
+			return from_string_encoding(text, size, std::string());
+		}
 
-				letter l(code);
-				ret.append(&l, 1);
-			}
+		static lstring from_utf8(const char *text, size_t size) {
+			lstring ret;
+			ret.resize(size + 1);
+
+			UErrorCode err = U_ZERO_ERROR;
+			int real_size = 0;
+			u_strFromUTF8Lenient((UChar *)ret.data(), ret.size(), &real_size, text, size, &err);
+			ret.resize(real_size);
 
 			return ret;
 		}

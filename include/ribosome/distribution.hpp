@@ -33,7 +33,7 @@ struct gaussian {
 		mu /= (double)v.size();
 
 		for (auto it = v.begin(); it != v.end(); ++it) {
-			Eigen::MatrixXd tmp = *it - mu;
+			Eigen::VectorXd tmp = *it - mu;
 
 			sigma += tmp * tmp.transpose();
 		}
@@ -41,6 +41,13 @@ struct gaussian {
 		sigma /= (double)v.size();
 		sigma_inv = sigma.inverse();
 		sigma_det = sigma.determinant();
+
+		std::cout <<
+			"mu:\n" << mu << "\n" <<
+			"sigma:\n" <<sigma << "\n" <<
+			"sigma.inverse:\n" << sigma_inv << "\n" <<
+			"sigma.determinant: " << sigma_det <<
+			std::endl;
 	}
 
 	double f(const Eigen::VectorXd &x) const {
@@ -62,7 +69,7 @@ struct gaussian {
 
 		return res;
 	}
-	
+
 	Eigen::Vector4d fd2(const Eigen::VectorXd &x) const {
 		Eigen::Vector4d res;
 
@@ -76,7 +83,7 @@ struct gaussian {
 
 		return res;
 	}
-	
+
 	Eigen::VectorXd fd3(const Eigen::VectorXd &x) const {
 		Eigen::VectorXd res(4);
 
@@ -101,8 +108,12 @@ struct gaussian {
 class filter {
 public:
 	filter(const Eigen::MatrixXd &kernel) : m_kernel(kernel) {}
+	
+	double dot(const Eigen::MatrixXd &data) const {
+		return data.cwiseProduct(m_kernel).sum();
+	}
 
-	Eigen::MatrixXd apply(const Eigen::MatrixXd &data) {
+	Eigen::MatrixXd apply(const Eigen::MatrixXd &data) const {
 		Eigen::MatrixXd res(data.rows(), data.cols());
 
 		for (int i = 0; i < data.rows(); ++i) {
