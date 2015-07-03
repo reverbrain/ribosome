@@ -1,6 +1,6 @@
 Summary:	Reverbrain core utility libraries
 Name:		ribosome
-Version:	0.1.0
+Version:	0.2.0
 Release:	1%{?dist}.1
 
 License:	Apachev2+
@@ -66,6 +66,9 @@ rm -rf %{buildroot}
 #%{_libdir}/lib*.so
 
 %changelog
+* Fri Jul 03 2015 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.0
+- Switched to ICU from Boost::Locale, added charset detector/utf8-converter
+
 * Sat Feb 14 2015 Evgeniy Polyakov <zbr@ioremap.net> - 0.1.0
 - Ribosome is a set of utility building blocks made at Reverbrain
 

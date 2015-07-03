@@ -1,3 +1,9 @@
+ribosome (0.2.0) unstable; urgency=low
+
+  * Switched to ICU from Boost::Locale, added charset detector/utf8-converter
+
+ -- Evgeniy Polyakov <zbr@ioremap.net>  Fri, 03 Jul 2015 20:28:57 +0400
+
 ribosome (0.1.0) unstable; urgency=low
 
   * Ribosome is a set of utility building blocks made at Reverbrain
