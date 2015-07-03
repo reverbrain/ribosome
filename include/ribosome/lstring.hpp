@@ -217,6 +217,15 @@ class lconvert {
 			ss << l;
 			return ss.str();
 		}
+
+		static lstring to_lower(const lstring &ls) {
+			lstring ret;
+			ret.resize(ls.size());
+
+			UErrorCode err = U_ZERO_ERROR;
+			u_strToLower((UChar *)ret.data(), ret.size(), (UChar *)ls.data(), ls.size(), NULL, &err);
+			return ret;
+		}
 };
 
 }} // ioremap::ribosome
