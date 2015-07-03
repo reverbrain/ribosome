@@ -63,6 +63,7 @@ rm -rf %{buildroot}
 %files devel
 %defattr(-,root,root,-)
 %{_includedir}/*
+%{_datadir}/ribosome/cmake/*
 #%{_libdir}/lib*.so
 
 %changelog
