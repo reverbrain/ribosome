@@ -22,6 +22,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include <unicode/uchar.h>
 #include <unicode/ucnv.h>
@@ -225,6 +226,26 @@ class lconvert {
 			UErrorCode err = U_ZERO_ERROR;
 			u_strToLower((UChar *)ret.data(), ret.size(), (UChar *)ls.data(), ls.size(), NULL, &err);
 			return ret;
+		}
+
+		static std::string string_to_lower(const char *text, size_t size) {
+			charset ch;
+			std::vector<UChar> tmp;
+			tmp.resize(size + 1);
+			size_t tmp_size = tmp.size();
+			ch.convert((UChar *)tmp.data(), &tmp_size, text, size, "");
+			tmp.resize(tmp_size);
+
+			lstring ls;
+			ls.resize(tmp.size());
+			UErrorCode err = U_ZERO_ERROR;
+			u_strToLower((UChar *)ls.data(), ls.size(), (UChar *)tmp.data(), tmp.size(), NULL, &err);
+
+			return to_string(ls);
+		}
+
+		static std::string string_to_lower(const std::string &str) {
+			return string_to_lower(str.data(), str.size());
 		}
 };
 
