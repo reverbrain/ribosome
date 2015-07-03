@@ -171,10 +171,17 @@ inline std::ostream &operator <<(std::ostream &out, const lstring &ls)
 
 class lconvert {
 	public:
+		static lstring from_unicode(const UChar *text, size_t size) {
+			lstring ret;
+			ret.resize(size);
+			u_memcpy((UChar *)ret.data(), text, size);
+			return ret;
+		}
+
 		static lstring from_string_encoding(const char *text, size_t size, const std::string &enc_hint) {
 			lstring ret;
 			ret.resize(size + 1);
-			int ret_size = ret.size();
+			size_t ret_size = ret.size();
 
 			charset ch;
 			ch.convert((UChar *)ret.data(), &ret_size, text, size, enc_hint);

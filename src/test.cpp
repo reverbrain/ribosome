@@ -1,4 +1,5 @@
 #include "ribosome/lstring.hpp"
+#include "ribosome/split.hpp"
 
 #include <iostream>
 #include <vector>
@@ -9,7 +10,7 @@ using namespace ioremap::ribosome;
 
 int main(int argc, char *argv[])
 {
-	std::string str("это такой test नमस्ते");
+	std::string str("это такой...test,.' नमस्ते");
 
 	std::cout << "string: " << str << std::endl;
 
@@ -50,6 +51,12 @@ int main(int argc, char *argv[])
 	ls[7] = u'Й';
 	std::cout << ls << std::endl;
 
+	split spl;
+
+	for (const auto &w: spl.convert_split_words(str.data(), str.size(), "")) {
+		std::cout << w << std::endl;
+	}
+
 	if (argc != 0) {
 		std::ifstream in(argv[1]);
 		std::ostringstream ss;
@@ -59,5 +66,9 @@ int main(int argc, char *argv[])
 	}
 	ls = lconvert::from_string_encoding(str.data(), str.size());
 	std::cout << ls << std::endl;
+
+	for (const auto &w: spl.convert_split_words(str.data(), str.size(), "")) {
+		std::cout << w << std::endl;
+	}
 	return 0;
 }
