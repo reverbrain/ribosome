@@ -1,31 +1,10 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: eblob
+Upstream-Name: ribosome
 Upstream-Contact: Evgeniy Polyakov <zbr@ioremap.net>
-Source: https://github.com/reverbrain/eblob
+Source: https://github.com/reverbrain/ribosome
 
 Files: *
 Copyright: (C) 2010-2012 Evgeniy Polyakov <zbr@ioremap.net>
-License: GPL-2+
- The full text of the GPL is distributed in
- /usr/share/common-licenses/GPL-2 on Debian systems.
-
-Files: ./library/crypto/sha512.c
-       ./library/crypto/sha512.h
-       ./library/crypto/u64.h
-Copyright: 2005-2006, 2008-2010, Free Software Foundation, Inc
-License: GPL-3+
- The full text of the GPL is distributed in
- /usr/share/common-licenses/GPL-3 on Debian systems.
-
-Files: ./library/rbtree.h
-Copyright: 1999, Andrea Arcangeli <andrea@suse.de>
-License: GPL-2+
- The full text of the GPL is distributed in
- /usr/share/common-licenses/GPL-2 on Debian systems.
-
-Files: ./library/rbtree.c
-Copyright: 1999, Andrea Arcangeli <andrea@suse.de>
-           2002, David Woodhouse <dwmw2@infradead.org>
 License: GPL-2+
  The full text of the GPL is distributed in
  /usr/share/common-licenses/GPL-2 on Debian systems.
