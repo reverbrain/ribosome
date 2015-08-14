@@ -26,6 +26,7 @@
 
 #include <unicode/uchar.h>
 #include <unicode/ucnv.h>
+#include <unicode/ustring.h>
 
 #include <string.h>
 
