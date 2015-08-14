@@ -10,7 +10,7 @@ Source0:	%{name}-%{version}.tar.bz2
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 
-BuildRequires:	boost-devel, boost-system, boost-locale
+BuildRequires:	libicu-devel, eigen3-devel
 BuildRequires:	cmake >= 2.6
 
 %description
