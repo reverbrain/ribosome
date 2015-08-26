@@ -17,7 +17,7 @@
 #ifndef __RIBOSOME_LSTRING_HPP
 #define __RIBOSOME_LSTRING_HPP
 
-#include "ribosome/charset.hpp"
+#include <ribosome/charset.hpp>
 
 #include <fstream>
 #include <sstream>

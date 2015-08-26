@@ -1,8 +1,6 @@
 #ifndef __RIBOSOME_CHARSET_HPP
 #define __RIBOSOME_CHARSET_HPP
 
-#include <ribosome/lstring.hpp>
-
 #include <unicode/ucsdet.h>
 
 #include <iostream>
