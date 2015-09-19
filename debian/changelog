@@ -1,3 +1,17 @@
+ribosome (0.2.1) unstable; urgency=low
+
+  * package: updated devel package deps
+  * charset: fixed includes
+  * copyright: updated dates
+  * lstring: added missing include
+  * cmake: export libraris too
+  * lstring: added string-to-string lowering method
+  * package: include cmake files into devel rpm package
+  * lstring: added to_lower() conversion method
+  * split: added word-split class
+
+ -- Evgeniy Polyakov <zbr@ioremap.net>  Sat, 19 Sep 2015 19:35:58 +0400
+
 ribosome (0.2.0) unstable; urgency=low
 
   * Switched to ICU from Boost::Locale, added charset detector/utf8-converter

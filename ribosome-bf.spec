@@ -1,6 +1,6 @@
 Summary:	Reverbrain core utility libraries
 Name:		ribosome
-Version:	0.2.0
+Version:	0.2.1
 Release:	1%{?dist}.1
 
 License:	Apachev2+
@@ -68,6 +68,17 @@ rm -rf %{buildroot}
 #%{_libdir}/lib*.so
 
 %changelog
+* Sat Sep 19 2015 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.1
+- package: updated devel package deps
+- charset: fixed includes
+- copyright: updated dates
+- lstring: added missing include
+- cmake: export libraris too
+- lstring: added string-to-string lowering method
+- package: include cmake files into devel rpm package
+- lstring: added to_lower() conversion method
+- split: added word-split class
+
 * Fri Jul 03 2015 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.0
 - Switched to ICU from Boost::Locale, added charset detector/utf8-converter
 
