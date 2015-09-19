@@ -1,3 +1,9 @@
+ribosome (0.2.2) unstable; urgency=low
+
+  * Updated debianization
+
+ -- Evgeniy Polyakov <zbr@ioremap.net>  Sat, 19 Sep 2015 20:19:30 +0400
+
 ribosome (0.2.1) unstable; urgency=low
 
   * package: updated devel package deps
