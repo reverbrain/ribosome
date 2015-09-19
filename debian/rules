@@ -4,14 +4,14 @@
 	dh $@ --buildsystem=cmake
 
 override_dh_auto_configure:
-	DESTDIR="$(CURDIR)/debian/ribosome" dh_auto_configure \
+	DESTDIR="$(CURDIR)/debian/ribosome-dev" dh_auto_configure \
 		--buildsystem=cmake -- \
 		-DCMAKE_INSTALL_PREFIX="/usr" \
 		-DCMAKE_BUILD_TYPE=RelWithDebInfo
 
 override_dh_auto_install:
 	dh_auto_install \
-		--destdir="$(CURDIR)/debian/ribosome"
+		--destdir="$(CURDIR)/debian/ribosome-dev"
 		--buildsystem=cmake
 
 override_dh_clean:
