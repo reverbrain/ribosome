@@ -1,6 +1,6 @@
 Summary:	Reverbrain core utility libraries
 Name:		ribosome
-Version:	0.2.2
+Version:	0.2.3
 Release:	1%{?dist}.1
 
 License:	Apachev2+
@@ -70,6 +70,9 @@ rm -rf %{buildroot}
 #%{_libdir}/lib*.so
 
 %changelog
+* Wed Apr 20 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.3
+- Added expiration checking module, which invokes provided callback as soon as associated timeout fires
+
 * Sat Sep 19 2015 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.2
 - Updated debianization
 
