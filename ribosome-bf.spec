@@ -10,7 +10,7 @@ Source0:	%{name}-%{version}.tar.bz2
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 
-BuildRequires:	libicu-devel, eigen3-devel
+BuildRequires:	libicu-devel, eigen3-devel, glog-devel
 BuildRequires:	cmake >= 2.6
 
 %define debug_package %{nil}
