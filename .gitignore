@@ -9,7 +9,7 @@
 *.so
 *.so.*
 *.tar.gz
-.sw*
+*.sw*
 *~
 CMakeCache.txt
 CMakeFiles/
@@ -18,12 +18,4 @@ cmake_install.cmake
 install_manifest.txt
 root/
 tags
-bindings/python/python/build/
-example/eblob_index_info
-example/eblob_merge
-example/eblob_open
-example/eblob_regex_iter
-tests/eblob_cpp_test
-tests/eblob_stress
-tests/tmp/
 build/*
