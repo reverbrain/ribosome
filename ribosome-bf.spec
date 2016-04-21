@@ -1,6 +1,6 @@
 Summary:	Reverbrain core utility libraries
 Name:		ribosome
-Version:	0.2.3
+Version:	0.2.4
 Release:	1%{?dist}.1
 
 License:	Apachev2+
@@ -70,6 +70,10 @@ rm -rf %{buildroot}
 #%{_libdir}/lib*.so
 
 %changelog
+* Thu Apr 21 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.4
+- test: added google test framework (icu, expiration tests)
+- expiration: insert() returns unique token which can be used to remove() registered callback
+
 * Wed Apr 20 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.3
 - Added expiration checking module, which invokes provided callback as soon as associated timeout fires
 

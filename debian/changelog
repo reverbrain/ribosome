@@ -1,3 +1,10 @@
+ribosome (0.2.4) unstable; urgency=low
+
+  * test: added google test framework (icu, expiration tests)
+  * expiration: insert() returns unique token which can be used to remove() registered callback
+
+ -- Evgeniy Polyakov <zbr@ioremap.net>  Thu, 21 Apr 2016 14:44:16 +0400
+
 ribosome (0.2.3) unstable; urgency=low
 
   * Added expiration checking module, which invokes provided callback as soon as associated timeout fires
