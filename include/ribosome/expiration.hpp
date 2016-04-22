@@ -3,6 +3,8 @@
 
 #include <chrono>
 #include <condition_variable>
+#include <ctime>
+#include <iomanip>
 #include <map>
 #include <thread>
 #include <unordered_map>
@@ -35,11 +37,26 @@ public:
 		ctl.token = ++m_seq;
 		ctl.callback = callback;
 
+		auto sec = std::chrono::time_point_cast<std::chrono::seconds>(expires_at);
+		auto tt = std::chrono::system_clock::to_time_t(expires_at);
+
 		auto it = m_timeouts.find(expires_at);
 		if (it == m_timeouts.end()) {
 			m_timeouts.insert(std::make_pair(expires_at, std::vector<control_t>({ctl})));
+			VLOG(2) << "ribosome::expiration::insert" <<
+				": expires_at: " << std::put_time(std::localtime(&tt), "%F %T") <<
+				"." << std::chrono::duration_cast<std::chrono::microseconds>(expires_at - sec).count() <<
+				", token: " << ctl.token <<
+				", callback: " << ctl.callback.target_type().name() <<
+				", pushed new timeouts vector";
 		} else {
 			it->second.push_back(ctl);
+			VLOG(2) << "ribosome::expiration::insert" <<
+				": expires_at: " << std::put_time(std::localtime(&tt), "%F %T") <<
+				"." << std::chrono::duration_cast<std::chrono::microseconds>(expires_at - sec).count() <<
+				", token: " << ctl.token <<
+				", callback: " << ctl.callback.target_type().name() <<
+				", timeouts vector size: " << it->second.size();
 		}
 
 		m_tok2time[ctl.token] = expires_at;
@@ -54,20 +71,40 @@ public:
 		std::unique_lock<std::mutex> guard(m_lock);
 
 		auto etime = m_tok2time.find(token);
-		if (etime == m_tok2time.end())
+		if (etime == m_tok2time.end()) {
+			VLOG(2) << "ribosome::expiration::remove" <<
+				": token: " << token <<
+				", there is no time in tok2time map";
 			return callback_t();
+		}
 
 		auto expires_at = etime->second;
 		m_tok2time.erase(etime);
 
+		auto sec = std::chrono::time_point_cast<std::chrono::seconds>(expires_at);
+		auto tt = std::chrono::system_clock::to_time_t(expires_at);
+
 		auto ctl = m_timeouts.find(expires_at);
-		if (ctl == m_timeouts.end())
+		if (ctl == m_timeouts.end()) {
+			VLOG(2) << "ribosome::expiration::remove" <<
+				": token: " << token <<
+				", expires_at: " << std::put_time(std::localtime(&tt), "%F %T") <<
+				"." << std::chrono::duration_cast<std::chrono::microseconds>(expires_at - sec).count() <<
+				", there are no callbacks in timeouts map";
 			return callback_t();
+		}
 
 		for (auto it = ctl->second.begin(), end = ctl->second.end(); it != end; ++it) {
 			if (it->token == token) {
 				auto callback = it->callback;
 				ctl->second.erase(it);
+
+				VLOG(2) << "ribosome::expiration::remove" <<
+					": token: " << token <<
+					", expires_at: " << std::put_time(std::localtime(&tt), "%F %T") <<
+					"." << std::chrono::duration_cast<std::chrono::microseconds>(expires_at - sec).count() <<
+					", callback: " << callback.operator bool() <<
+					", timeouts vector size: " << ctl->second.size();
 
 				if (ctl->second.empty()) {
 					m_timeouts.erase(ctl);
