@@ -68,6 +68,11 @@ public:
 			if (it->token == token) {
 				auto callback = it->callback;
 				ctl->second.erase(it);
+
+				if (ctl->second.empty()) {
+					m_timeouts.erase(ctl);
+				}
+
 				return callback;
 			}
 		}
@@ -110,7 +115,10 @@ private:
 				if (std::chrono::system_clock::now() < timestamp)
 					break;
 
-				std::swap(expired, f->second);
+				for (auto &c: f->second) {
+					expired.emplace_back(c);
+				}
+
 				m_timeouts.erase(f);
 
 				for (auto &ctl: expired) {
