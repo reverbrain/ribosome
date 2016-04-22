@@ -10,6 +10,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <glog/logging.h>
+
 namespace ioremap { namespace ribosome {
 
 class expiration {
