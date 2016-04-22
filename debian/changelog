@@ -1,3 +1,12 @@
+ribosome (0.2.5) unstable; urgency=low
+
+  * expiration: added operation logs
+  * expiration: fixed expired vector or callbacks assignment (it had reference to vector of to-be-freed objects)
+  * expiration: remove timeout entry if there are no callbacks for that time anymore
+  * package: depend on google log package
+
+ -- Evgeniy Polyakov <zbr@ioremap.net>  Fri, 22 Apr 2016 18:03:31 +0400
+
 ribosome (0.2.4) unstable; urgency=low
 
   * test: added google test framework (icu, expiration tests)

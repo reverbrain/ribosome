@@ -1,6 +1,6 @@
 Summary:	Reverbrain core utility libraries
 Name:		ribosome
-Version:	0.2.4
+Version:	0.2.5
 Release:	1%{?dist}.1
 
 License:	Apachev2+
@@ -70,6 +70,12 @@ rm -rf %{buildroot}
 #%{_libdir}/lib*.so
 
 %changelog
+* Fri Apr 22 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.5
+- expiration: added operation logs
+- expiration: fixed expired vector or callbacks assignment (it had reference to vector of to-be-freed objects)
+- expiration: remove timeout entry if there are no callbacks for that time anymore
+- package: depend on google log package
+
 * Thu Apr 21 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.4
 - test: added google test framework (icu, expiration tests)
 - expiration: insert() returns unique token which can be used to remove() registered callback
