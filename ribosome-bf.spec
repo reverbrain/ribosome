@@ -1,6 +1,6 @@
 Summary:	Reverbrain core utility libraries
 Name:		ribosome
-Version:	0.2.5
+Version:	0.2.6
 Release:	1%{?dist}.1
 
 License:	Apachev2+
@@ -70,6 +70,10 @@ rm -rf %{buildroot}
 #%{_libdir}/lib*.so
 
 %changelog
+* Mon Apr 25 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.6
+- expiration: stop() should wait for processing thread to exit, thread must be initialized after control structures
+- expiration: added missing include
+
 * Fri Apr 22 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.5
 - expiration: added operation logs
 - expiration: fixed expired vector or callbacks assignment (it had reference to vector of to-be-freed objects)

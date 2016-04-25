@@ -1,3 +1,10 @@
+ribosome (0.2.6) unstable; urgency=low
+
+  * expiration: stop() should wait for processing thread to exit, thread must be initialized after control structures
+  * expiration: added missing include
+
+ -- Evgeniy Polyakov <zbr@ioremap.net>  Mon, 25 Apr 2016 13:23:25 +0400
+
 ribosome (0.2.5) unstable; urgency=low
 
   * expiration: added operation logs
