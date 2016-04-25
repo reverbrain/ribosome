@@ -30,6 +30,12 @@ public:
 	void stop() {
 		m_need_exit = true;
 		m_wait.notify_one();
+
+		std::unique_lock<std::mutex> guard(m_lock);
+		m_wait.wait(guard, [&] () {return m_completed == true;});
+
+		m_timeouts.clear();
+		m_tok2time.clear();
 	}
 
 	token_t insert(const std::chrono::system_clock::time_point &expires_at, callback_t callback) {
@@ -122,26 +128,30 @@ public:
 private:
 	token_t m_seq = 0;
 	bool m_need_exit = false;
+	bool m_completed = false;
 	std::condition_variable m_wait;
 	std::mutex m_lock;
-
-	std::thread m_thread;
 
 	typedef struct {
 		token_t	token;
 		callback_t	callback;
 	} control_t;
 
+	expiration(const expiration &other) = delete;
+
 	std::map<std::chrono::system_clock::time_point, std::vector<control_t>> m_timeouts;
 	std::unordered_map<token_t, std::chrono::system_clock::time_point> m_tok2time;
+
+	std::thread m_thread;
 
 	void run() {
 		while (!m_need_exit) {
 			std::unique_lock<std::mutex> guard(m_lock);
 
-			auto next_check = std::chrono::system_clock::now() + std::chrono::seconds(1);
-			if (m_timeouts.size())
+			std::chrono::system_clock::time_point next_check = std::chrono::system_clock::now() + std::chrono::seconds(1);
+			if (m_timeouts.size()) {
 				next_check = m_timeouts.begin()->first;
+			}
 
 			m_wait.wait_until(guard, next_check);
 
@@ -171,6 +181,9 @@ private:
 				ctl.callback();
 			}
 		}
+
+		m_completed = true;
+		m_wait.notify_all();
 	}
 };
 
