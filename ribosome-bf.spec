@@ -1,6 +1,6 @@
 Summary:	Reverbrain core utility libraries
 Name:		ribosome
-Version:	0.2.6
+Version:	0.2.7
 Release:	1%{?dist}.1
 
 License:	Apachev2+
@@ -70,6 +70,9 @@ rm -rf %{buildroot}
 #%{_libdir}/lib*.so
 
 %changelog
+* Wed May 11 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.7
+- vector_lock: added lock abstraction which can safely lock multiple locks indexed by string keys
+
 * Mon Apr 25 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.6
 - expiration: stop() should wait for processing thread to exit, thread must be initialized after control structures
 - expiration: added missing include

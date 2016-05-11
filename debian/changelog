@@ -1,3 +1,9 @@
+ribosome (0.2.7) unstable; urgency=low
+
+  * vector_lock: added lock abstraction which can safely lock multiple locks indexed by string keys
+
+ -- Evgeniy Polyakov <zbr@ioremap.net>  Wed, 11 May 2016 17:36:38 +0400
+
 ribosome (0.2.6) unstable; urgency=low
 
   * expiration: stop() should wait for processing thread to exit, thread must be initialized after control structures
