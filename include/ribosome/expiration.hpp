@@ -14,6 +14,22 @@
 
 namespace ioremap { namespace ribosome {
 
+static inline const char *print_time(const std::chrono::system_clock::time_point &tp, char *dst, int dsize)
+{
+	char str[64];
+	struct tm tm;
+
+	auto sec = std::chrono::time_point_cast<std::chrono::seconds>(tp);
+	time_t tsec = std::chrono::system_clock::to_time_t(sec);
+	long tusec = std::chrono::duration_cast<std::chrono::microseconds>(tp - sec).count();
+
+	localtime_r(&tsec, &tm);
+	strftime(str, sizeof(str), "%F %R:%S", &tm);
+
+	snprintf(dst, dsize, "%s.%06lu", str, tusec);
+	return dst;
+}
+
 class expiration {
 public:
 	typedef std::function<void ()> callback_t;
@@ -45,26 +61,29 @@ public:
 		ctl.token = ++m_seq;
 		ctl.callback = callback;
 
-		auto sec = std::chrono::time_point_cast<std::chrono::seconds>(expires_at);
-		auto tt = std::chrono::system_clock::to_time_t(expires_at);
-
 		auto it = m_timeouts.find(expires_at);
 		if (it == m_timeouts.end()) {
 			m_timeouts.insert(std::make_pair(expires_at, std::vector<control_t>({ctl})));
-			VLOG(2) << "ribosome::expiration::insert" <<
-				": expires_at: " << std::put_time(std::localtime(&tt), "%F %T") <<
-				"." << std::chrono::duration_cast<std::chrono::microseconds>(expires_at - sec).count() <<
-				", token: " << ctl.token <<
-				", callback: " << ctl.callback.target_type().name() <<
-				", pushed new timeouts vector";
+
+			if (VLOG_IS_ON(2)) {
+				char buf[128];
+				VLOG(2) << "ribosome::expiration::insert" <<
+					": expires_at: " << print_time(expires_at, buf, sizeof(buf)) <<
+					", token: " << ctl.token <<
+					", callback: " << ctl.callback.target_type().name() <<
+					", pushed new timeouts vector";
+			}
 		} else {
 			it->second.push_back(ctl);
-			VLOG(2) << "ribosome::expiration::insert" <<
-				": expires_at: " << std::put_time(std::localtime(&tt), "%F %T") <<
-				"." << std::chrono::duration_cast<std::chrono::microseconds>(expires_at - sec).count() <<
-				", token: " << ctl.token <<
-				", callback: " << ctl.callback.target_type().name() <<
-				", timeouts vector size: " << it->second.size();
+
+			if (VLOG_IS_ON(2)) {
+				char buf[128];
+				VLOG(2) << "ribosome::expiration::insert" <<
+					": expires_at: " << print_time(expires_at, buf, sizeof(buf)) <<
+					", token: " << ctl.token <<
+					", callback: " << ctl.callback.target_type().name() <<
+					", timeouts vector size: " << it->second.size();
+			}
 		}
 
 		m_tok2time[ctl.token] = expires_at;
