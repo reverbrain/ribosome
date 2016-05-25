@@ -108,16 +108,15 @@ public:
 		auto expires_at = etime->second;
 		m_tok2time.erase(etime);
 
-		auto sec = std::chrono::time_point_cast<std::chrono::seconds>(expires_at);
-		auto tt = std::chrono::system_clock::to_time_t(expires_at);
-
 		auto ctl = m_timeouts.find(expires_at);
 		if (ctl == m_timeouts.end()) {
-			VLOG(2) << "ribosome::expiration::remove" <<
-				": token: " << token <<
-				", expires_at: " << std::put_time(std::localtime(&tt), "%F %T") <<
-				"." << std::chrono::duration_cast<std::chrono::microseconds>(expires_at - sec).count() <<
-				", there are no callbacks in timeouts map";
+			if (VLOG_IS_ON(2)) {
+				char buf[128];
+				VLOG(2) << "ribosome::expiration::remove" <<
+					": expires_at: " << print_time(expires_at, buf, sizeof(buf)) <<
+					", token: " << token <<
+					", there are no callbacks in timeouts map";
+			}
 			return callback_t();
 		}
 
@@ -126,12 +125,14 @@ public:
 				auto callback = it->callback;
 				ctl->second.erase(it);
 
-				VLOG(2) << "ribosome::expiration::remove" <<
-					": token: " << token <<
-					", expires_at: " << std::put_time(std::localtime(&tt), "%F %T") <<
-					"." << std::chrono::duration_cast<std::chrono::microseconds>(expires_at - sec).count() <<
-					", callback: " << callback.operator bool() <<
-					", timeouts vector size: " << ctl->second.size();
+				if (VLOG_IS_ON(2)) {
+					char buf[128];
+					VLOG(2) << "ribosome::expiration::remove" <<
+						": expires_at: " << print_time(expires_at, buf, sizeof(buf)) <<
+						", token: " << token <<
+						", callback: " << callback.operator bool() <<
+						", timeouts vector size: " << ctl->second.size();
+				}
 
 				if (ctl->second.empty()) {
 					m_timeouts.erase(ctl);
