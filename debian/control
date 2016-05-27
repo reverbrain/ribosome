@@ -7,7 +7,7 @@ Build-Depends:
  debhelper (>= 7.0.50~),
  libicu-dev,
  libeigen3-dev,
- libglog-dev | libgoogle-glog-dev,
+ libglog-dev | libgoogle-glog-dev
 Standards-Version: 3.8.0
 Homepage: http://www.reverbrain.com/
 Vcs-Git: git://github.com/reverbrain/ribosome.git
@@ -15,5 +15,6 @@ Vcs-Browser: https://github.com/reverbrain/ribosome
 
 Package: ribosome-dev
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libicu-dev, libeigen3-dev
+Depends: ${shlibs:Depends}, ${misc:Depends}, libicu-dev, libeigen3-dev,
+ libglog-dev | libgoogle-glog-dev
 Description: Ribosome is a set of utility building blocks made at Reverbrain
