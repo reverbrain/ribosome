@@ -27,7 +27,7 @@ Ribosome is a set of utility building blocks made at Reverbrain
 Summary: Development files for %{name}
 Group: Development/Libraries
 #Requires: %{name} = %{version}-%{release}
-Requires: libicu-devel, eigen3-devel
+Requires: libicu-devel, eigen3-devel, glog-devel, gflags-devel
 
 
 %description devel
