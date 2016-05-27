@@ -1,3 +1,9 @@
+ribosome (0.2.9) unstable; urgency=low
+
+  * spec: added build dependencies as dependencies, since it is header-only development package
+
+ -- Evgeniy Polyakov <zbr@ioremap.net>  Fri, 27 May 2016 19:22:01 +0400
+
 ribosome (0.2.8) unstable; urgency=low
 
   * debian: added build dependencies as dependencies, since it is header-only development package

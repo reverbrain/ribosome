@@ -1,6 +1,6 @@
 Summary:	Reverbrain core utility libraries
 Name:		ribosome
-Version:	0.2.8
+Version:	0.2.9
 Release:	1%{?dist}.1
 
 License:	Apachev2+
@@ -70,6 +70,9 @@ rm -rf %{buildroot}
 #%{_libdir}/lib*.so
 
 %changelog
+* Fri May 27 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.9
+- spec: added build dependencies as dependencies, since it is header-only development package
+
 * Fri May 27 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.8
 - debian: added build dependencies as dependencies, since it is header-only development package
 - spec: depend on gflags
