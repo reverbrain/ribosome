@@ -1,6 +1,6 @@
 Summary:	Reverbrain core utility libraries
 Name:		ribosome
-Version:	0.2.7
+Version:	0.2.8
 Release:	1%{?dist}.1
 
 License:	Apachev2+
@@ -70,6 +70,12 @@ rm -rf %{buildroot}
 #%{_libdir}/lib*.so
 
 %changelog
+* Fri May 27 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.8
+- debian: added build dependencies as dependencies, since it is header-only development package
+- spec: depend on gflags
+- expiration: get rid of std::put_time(), it is not available in gcc 4.8
+- cmake: include/library macros should include eigen3 and glog files
+
 * Wed May 11 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.7
 - vector_lock: added lock abstraction which can safely lock multiple locks indexed by string keys
 

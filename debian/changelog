@@ -1,3 +1,12 @@
+ribosome (0.2.8) unstable; urgency=low
+
+  * debian: added build dependencies as dependencies, since it is header-only development package
+  * spec: depend on gflags
+  * expiration: get rid of std::put_time(), it is not available in gcc 4.8
+  * cmake: include/library macros should include eigen3 and glog files
+
+ -- Evgeniy Polyakov <zbr@ioremap.net>  Fri, 27 May 2016 18:36:00 +0400
+
 ribosome (0.2.7) unstable; urgency=low
 
   * vector_lock: added lock abstraction which can safely lock multiple locks indexed by string keys
