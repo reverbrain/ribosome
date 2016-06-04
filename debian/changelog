@@ -1,3 +1,10 @@
+ribosome (0.2.10) unstable; urgency=low
+
+  * fpool: initial implementation of the pool of forked processes which perform the same task and have io channels to communicate with the controller
+  * fpool: added worker process restart if it has been killed
+
+ -- Evgeniy Polyakov <zbr@ioremap.net>  Sun, 05 Jun 2016 01:01:00 +0400
+
 ribosome (0.2.9) unstable; urgency=low
 
   * spec: added build dependencies as dependencies, since it is header-only development package

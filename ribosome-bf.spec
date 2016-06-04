@@ -1,6 +1,6 @@
 Summary:	Reverbrain core utility libraries
 Name:		ribosome
-Version:	0.2.9
+Version:	0.2.10
 Release:	1%{?dist}.1
 
 License:	Apachev2+
@@ -70,6 +70,10 @@ rm -rf %{buildroot}
 #%{_libdir}/lib*.so
 
 %changelog
+* Sun Jun 05 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.10
+- fpool: initial implementation of the pool of forked processes which perform the same task and have io channels to communicate with the controller
+- fpool: added worker process restart if it has been killed
+
 * Fri May 27 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.9
 - spec: added build dependencies as dependencies, since it is header-only development package
 
