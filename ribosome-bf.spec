@@ -67,7 +67,7 @@ rm -rf %{buildroot}
 %defattr(-,root,root,-)
 %{_includedir}/*
 %{_datadir}/ribosome/cmake/*
-#%{_libdir}/lib*.so
+%{_libdir}/lib*.so*
 
 %changelog
 * Sun Jun 05 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.10
