@@ -12,6 +12,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
 find_package(ICU REQUIRED COMPONENTS i18n io)
 set(CMAKE_EXE_LINKER_FLAGS -pthread)
+set(CMAKE_SHARED_LINKER_FLAGS -pthread)
 find_package(Threads REQUIRED)
 
 include(cmake/locate_library.cmake)
