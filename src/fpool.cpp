@@ -1,6 +1,7 @@
 #include "ribosome/fpool.hpp"
 #include "ribosome/timer.hpp"
 
+#include <algorithm>
 
 #include <sys/epoll.h>
 #include <sys/socket.h>
@@ -10,6 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#include <glog/logging.h>
 
 #ifdef FPOOL_STDOUT_DEBUG
 #define dprintf(fmt, a...) printf(fmt, ##a)
@@ -73,22 +76,12 @@ bool io_scheduler::ready(long timeout_ms)
 
 worker::worker()
 {
-	m_fd = -1;
-	m_pid = -1;
-}
-worker::worker(const worker &w)
-{
-	m_fd = -1;
-	m_pid = -1;
 }
 
 worker::~worker()
 {
-	if (m_fd != -1) {
-		close(m_fd);
-	}
-
-	close(m_epollfd);
+	int status;
+	stop(&status);
 }
 
 int worker::start(worker::callback_t callback)
@@ -98,19 +91,25 @@ int worker::start(worker::callback_t callback)
 
 	err = socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, fd);
 	if (err == -1) {
-		return -errno;
+		err = -errno;
+		LOG(ERROR) << "fpool::worker::start: could not create socketpair" <<
+			": error: " << strerror(-err) << " [" << err << "]";
+		return err;
 	}
 
-	pid_t m_pid = fork();
+	m_pid = fork();
 	if (m_pid == -1) {
-		return -errno;
+		err = -errno;
+		LOG(ERROR) << "fpool::worker::start: could not fork" <<
+			": error: " << strerror(-err) << " [" << err << "]";
+		return err;
 	}
 
 	// child process
 	if (m_pid == 0) {
 		setsid();
 
-		close(fd[0]);
+		::close(fd[0]);
 		m_fd = fd[1];
 
 		m_epollfd = epoll_create1(EPOLL_CLOEXEC);
@@ -125,15 +124,100 @@ int worker::start(worker::callback_t callback)
 		exit(0);
 	}
 
-	close(fd[1]);
+	::close(fd[1]);
 	m_fd = fd[0];
 
 	m_epollfd = epoll_create1(EPOLL_CLOEXEC);
 	if (m_epollfd < 0) {
-		return -errno;
+		err = -errno;
+		LOG(ERROR) << "fpool::worker::start: could not create epoll file descriptor" <<
+			": error: " << strerror(-err) << " [" << err << "]";
+		return err;
 	}
 
+	LOG(INFO) << "fpool::worker::start: process " << m_pid << " has been started";
 	return 0;
+}
+
+void worker::close()
+{
+	if (m_fd >= 0) {
+		::close(m_fd);
+		m_fd = -1;
+	}
+	if (m_epollfd >= 0) {
+		::close(m_epollfd);
+		m_epollfd = -1;
+	}
+}
+
+int worker::stop(int *status)
+{
+	close();
+
+	if (m_pid < 0) {
+		*status = 0;
+		return 0;
+	}
+
+	int err = kill(m_pid, SIGTERM);
+	if (err < 0) {
+		err = -errno;
+		LOG(ERROR) << "fpool::worker::stop: could not send SIGTERM to pid " << m_pid <<
+			", error: " << strerror(-err) << " [" << err << "]";
+		return err;
+	}
+
+	pid_t pid = 0;
+	for (int i = 0; i < 30; ++i) {
+		pid = waitpid(m_pid, status, WNOHANG);
+		if (pid < 0) {
+			err = -errno;
+
+			LOG(ERROR) << "fpool::worker::stop: could not wait1 for to pid " << m_pid <<
+				", error: " << strerror(-err) << " [" << err << "]";
+			return err;
+		}
+
+		if (pid > 0)
+			break;
+
+		usleep(30000);
+	}
+
+	if (pid == 0) {
+		err = kill(m_pid, SIGKILL);
+		if (err < 0) {
+			err = -errno;
+			LOG(ERROR) << "fpool::worker::stop: could not send SIGKILL to pid " << m_pid <<
+				", error: " << strerror(-err) << " [" << err << "]";
+			return err;
+		}
+
+		pid = waitpid(m_pid, status, 0);
+		if (pid <= 0) {
+			err = -errno;
+			LOG(ERROR) << "fpool::worker::stop: could not wait2 for pid " << m_pid <<
+				", error: " << strerror(-err) << " [" << err << "]";
+			return err;
+		}
+	}
+
+	LOG(INFO) << "fpool::worker::stop: process " << m_pid << " has been stopped";
+	m_pid = -1;
+	return 0;
+}
+
+int worker::restart(worker::callback_t callback)
+{
+	int status;
+	int err = stop(&status);
+	if (err) {
+		if (err != -ESRCH)
+			return err;
+	}
+
+	return start(callback);
 }
 
 pid_t worker::pid() const {
@@ -185,8 +269,6 @@ int worker::write(const message &msg)
 {
 	ssize_t err;
 
-	std::unique_lock<std::mutex> guard(m_lock);
-
 	err = write_raw((char *)&msg.header, msg.header_size);
 	if (err < 0)
 		return err;
@@ -227,8 +309,6 @@ int worker::read(message &msg)
 {
 	ssize_t err;
 
-	std::unique_lock<std::mutex> guard(m_lock);
-
 	err = read_raw((char *)&msg.header, msg.header_size);
 	if (err < 0)
 		return err;
@@ -245,6 +325,8 @@ int worker::read(message &msg)
 
 
 controller::controller(int size, worker::callback_t callback)
+	: m_callback(callback)
+	, m_wait_thread(std::bind(&controller::wait_for_children, this))
 {
 	for (int i = 0; i < size; ++i) {
 		worker w;
@@ -252,14 +334,37 @@ controller::controller(int size, worker::callback_t callback)
 	}
 
 	for (auto &w: m_workers) {
-		w.start(callback);
+		int err = w.start(callback);
+		if (err < 0) {
+			std::ostringstream ss;
+			ss << "could not start new worker thread, error: " << strerror(-err) << " [" << err << "]";
+			throw std::runtime_error(ss.str());
+		}
+	}
+}
+controller::~controller()
+{
+	m_wait_need_exit = true;
+	m_wait_thread.join();
+
+	for (auto &w: m_workers) {
+		int status;
+		w.stop(&status);
 	}
 }
 
 void controller::schedule(const message &msg, completion_t complete)
 {
+	int err;
+
+	if (m_workers.empty()) {
+		err = -ENOENT;
+		complete(err, msg);
+		return;
+	}
+
 	worker &w = m_workers[rand() % m_workers.size()];
-	int err = w.write(msg);
+	err = w.write(msg);
 	if (err < 0) {
 		complete(err, msg);
 		return;
@@ -268,6 +373,54 @@ void controller::schedule(const message &msg, completion_t complete)
 	message reply;
 	err = w.read(reply);
 	complete(err, reply);
+}
+
+void controller::wait_for_children()
+{
+	while (!m_wait_need_exit) {
+		int status;
+
+		pid_t pid = waitpid(-1, &status, WNOHANG);
+		if (pid > 0) {
+			LOG(ERROR) << "fpool::controller::wait_for_children: detected process termination"
+				": pid: " << pid <<
+				", exited: " << WIFEXITED(status) <<
+					" (status: " << WEXITSTATUS(status) << ")" <<
+				", killed-by-signal: " << WIFSIGNALED(status) <<
+					" (signal: " << WTERMSIG(status) << ", coredump: " << WCOREDUMP(status) << ")";
+
+			auto it = std::find_if(m_workers.begin(), m_workers.end(), [=] (const worker &w) {
+						return w.pid() == pid;
+					});
+			if (it == m_workers.end()) {
+				continue;
+			}
+
+			if (WIFEXITED(status) || WIFSIGNALED(status)) {
+				int err;
+
+				it->close();
+				err = it->start(m_callback);
+				if (err < 0) {
+					LOG(ERROR) << "fpool::controller::wait_for_children: could not restart process: " <<
+						strerror(errno);
+					m_workers.erase(it);
+				}
+			}
+		} else {
+			usleep(10000);
+		}
+	}
+}
+
+std::vector<pid_t> controller::pids() const {
+	std::vector<pid_t> ret;
+
+	for (auto &w: m_workers) {
+		ret.push_back(w.pid());
+	}
+
+	return ret;
 }
 
 } // namespace fpool

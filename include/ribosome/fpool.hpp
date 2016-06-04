@@ -4,6 +4,7 @@
 #include <memory>
 #include <sstream>
 #include <stdexcept>
+#include <thread>
 #include <vector>
 
 namespace ioremap { namespace ribosome { namespace fpool {
@@ -61,10 +62,13 @@ public:
 	typedef std::function<message (const message &)> callback_t;
 
 	worker();
-	worker(const worker &w);
 	~worker();
 
 	int start(callback_t callback);
+	int restart(callback_t callback);
+	int stop(int *status);
+
+	void close();
 
 	int write(const message &msg);
 	int read(message &msg);
@@ -72,12 +76,10 @@ public:
 	pid_t pid() const;
 
 private:
-	int m_fd;
-	int m_epollfd;
-	pid_t m_pid;
+	int m_fd = -1;
+	int m_epollfd = -1;
+	pid_t m_pid = -1;
 	bool m_need_exit = false;
-
-	std::mutex m_lock;
 
 	int read_raw(char *ptr, size_t size);
 	int write_raw(const char *ptr, size_t size);
@@ -90,12 +92,21 @@ public:
 	typedef std::function<void (int status, const message &msg)> completion_t;
 
 	controller(int size, worker::callback_t callback);
+	~controller();
 
 	void schedule(const message &msg, completion_t complete);
 
+	std::vector<pid_t> pids() const;
+
 private:
 	std::vector<worker> m_workers;
+	worker::callback_t m_callback;
 	std::condition_variable m_cv;
+
+	bool m_wait_need_exit = false;
+	std::thread m_wait_thread;
+
+	void wait_for_children();
 };
 
 }}} // namespace ioremap::ribosome::fpool
