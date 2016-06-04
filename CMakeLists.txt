@@ -4,8 +4,8 @@ project (ribosome)
 FILE (READ "${CMAKE_CURRENT_SOURCE_DIR}/debian/changelog" DEBCHANGELOG)
 
 string(REGEX MATCH "([0-9]+\\.[0-9]+\\.[0-9]+)" DEBFULLVERSION "${DEBCHANGELOG}")
-STRING (REGEX MATCH "([0-9]+\\.[0-9]+)" WARP_VERSION_MAJOR "${DEBFULLVERSION}")
-STRING (REGEX MATCH "([0-9]+$)" WARP_VERSION_MINOR "${DEBFULLVERSION}")
+STRING (REGEX MATCH "([0-9]+\\.[0-9]+)" RIBOSOME_VERSION_MAJOR "${DEBFULLVERSION}")
+STRING (REGEX MATCH "([0-9]+$)" RIBOSOME_VERSION_MINOR "${DEBFULLVERSION}")
 
 set(CMAKE_CXX_FLAGS "-g -std=c++0x -W -Wall -Wextra -fstack-protector-all")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
@@ -73,6 +73,7 @@ link_directories(
 	${GLOG_LIBRARY_DIRS}
 )
 
+add_subdirectory(src)
 add_subdirectory(test)
 
 FILE(GLOB headers
