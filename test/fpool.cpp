@@ -10,7 +10,7 @@ public:
 	fpool_test() : m_ctl(m_workers, std::bind(&fpool_test::process, this, std::placeholders::_1)) {
 	}
 
-	void send_and_test(uint64_t cmd) {
+	void send_and_test(int cmd) {
 		fpool::message msg;
 		msg.header.cmd = cmd;
 		m_ctl.schedule(msg, [=](int status, const fpool::message &reply) {
@@ -34,10 +34,12 @@ protected:
 		memcpy(reply.data.get(), m_message.data(), reply.header.size);
 
 #if 1
-		fprintf(stderr, "%d: process: message: cmd: %ld, size: %ld -> cmd: %ld, size: %ld, message_size: %ld, message: %.*s\n",
+		fprintf(stderr, "%d: process: message: "
+				"cmd: %d, id: %ld, size: %ld -> "
+				"cmd: %d, id: %ld, size: %ld, message_size: %ld, message: %.*s\n",
 				getpid(),
-				msg.header.cmd, msg.header.size,
-				reply.header.cmd, reply.header.size,
+				msg.header.cmd, msg.header.id, msg.header.size,
+				reply.header.cmd, reply.header.id, reply.header.size,
 				m_message.size(),
 				(int)reply.header.size, reply.data.get());
 #endif

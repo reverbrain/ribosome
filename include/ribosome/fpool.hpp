@@ -25,7 +25,9 @@ struct message {
 	struct {
 		uint64_t size = 0;
 		uint64_t flags = 0;
-		uint64_t cmd = 0;
+		uint64_t id = 0;
+		int status = 0;
+		int cmd = 0;
 	} header;
 
 	static const size_t header_size = sizeof(header);
