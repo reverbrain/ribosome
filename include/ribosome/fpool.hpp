@@ -44,6 +44,13 @@ struct message {
 
 	~message() {
 	}
+
+	static message copy_header(const message &other) {
+		message ret;
+		ret.header = other.header;
+		ret.header.size = 0;
+		return ret;
+	}
 };
 
 class io_scheduler {
@@ -91,7 +98,7 @@ private:
 
 class controller {
 public:
-	typedef std::function<void (int status, const message &msg)> completion_t;
+	typedef std::function<void (const message &)> completion_t;
 
 	controller(int size, worker::callback_t callback);
 	~controller();

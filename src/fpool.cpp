@@ -355,24 +355,27 @@ controller::~controller()
 
 void controller::schedule(const message &msg, completion_t complete)
 {
-	int err;
+	message reply = message::copy_header(msg);
 
 	if (m_workers.empty()) {
-		err = -ENOENT;
-		complete(err, msg);
+		reply.header.status = -ENOENT;
+		complete(reply);
 		return;
 	}
 
 	worker &w = m_workers[rand() % m_workers.size()];
-	err = w.write(msg);
-	if (err < 0) {
-		complete(err, msg);
+	reply.header.status = w.write(msg);
+	if (reply.header.status < 0) {
+		complete(reply);
 		return;
 	}
 
-	message reply;
-	err = w.read(reply);
-	complete(err, reply);
+	int err = w.read(reply);
+	if (reply.header.status == 0 && err != 0) {
+		reply.header.status = err;
+	}
+
+	complete(reply);
 }
 
 void controller::wait_for_children()

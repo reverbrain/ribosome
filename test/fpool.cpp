@@ -13,8 +13,8 @@ public:
 	void send_and_test(int cmd) {
 		fpool::message msg;
 		msg.header.cmd = cmd;
-		m_ctl.schedule(msg, [=](int status, const fpool::message &reply) {
-					ASSERT_EQ(status, 0);
+		m_ctl.schedule(msg, [=](const fpool::message &reply) {
+					ASSERT_EQ(reply.header.status, 0);
 					ASSERT_EQ(reply.header.cmd, msg.header.cmd + 1);
 					ASSERT_EQ(reply.header.size, fpool_test::m_message.size());
 
