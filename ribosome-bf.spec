@@ -1,6 +1,6 @@
 Summary:	Reverbrain core utility libraries
 Name:		ribosome
-Version:	0.2.10
+Version:	0.2.11
 Release:	1%{?dist}.1
 
 License:	Apachev2+
@@ -70,6 +70,14 @@ rm -rf %{buildroot}
 %{_libdir}/lib*.so*
 
 %changelog
+* Wed Jun 08 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.11
+- fpool: made schedule() method asynchronous
+- cmake: added ribosome library into exported list of libs
+- fpool: use reply message status to place returned status instead of separate field in completion callback
+- fpool: added id/status into message header
+- spec: put *.so files into the package
+- cmake: added -pthread linker flag
+
 * Sun Jun 05 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.10
 - fpool: initial implementation of the pool of forked processes which perform the same task and have io channels to communicate with the controller
 - fpool: added worker process restart if it has been killed
