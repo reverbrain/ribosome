@@ -105,6 +105,8 @@ int worker::start(worker::callback_t callback)
 		return err;
 	}
 
+	m_need_exit = false;
+
 	// child process
 	if (m_pid == 0) {
 		setsid();
@@ -120,7 +122,9 @@ int worker::start(worker::callback_t callback)
 
 		m_pid = getpid();
 
+		LOG(INFO) << "worker: " << m_pid << ", need_exit: " << m_need_exit << ": starting";
 		run(callback);
+		LOG(INFO) << "worker: " << m_pid << ": exiting";
 		exit(0);
 	}
 
@@ -135,6 +139,8 @@ int worker::start(worker::callback_t callback)
 		return err;
 	}
 
+	m_io_thread.reset(new std::thread(std::bind(&worker::io, this)));
+
 	LOG(INFO) << "fpool::worker::start: process " << m_pid << " has been started";
 	return 0;
 }
@@ -148,6 +154,12 @@ void worker::close()
 	if (m_epollfd >= 0) {
 		::close(m_epollfd);
 		m_epollfd = -1;
+	}
+
+	if (m_io_thread) {
+		m_need_exit = true;
+		m_io_thread->join();
+		m_io_thread.reset();
 	}
 }
 
@@ -220,103 +232,219 @@ int worker::restart(worker::callback_t callback)
 	return start(callback);
 }
 
-pid_t worker::pid() const {
+pid_t worker::pid() const
+{
 	return m_pid;
 }
 
+size_t worker::queue_size() const
+{
+	return m_queue.size();
+}
+
+void worker::queue(const message &msg, completion_t complete)
+{
+	std::unique_lock<std::mutex> lk(m_lock);
+	m_queue.push_back(std::pair<message, completion_t>(msg, complete));
+	m_wait.notify_one();
+}
+
+// runs in forked child
 void worker::run(callback_t callback)
 {
 	while (!m_need_exit) {
 		int err;
 		message msg;
 
-		err = read(msg);
-		if (err) {
-			exit(err);
+		while (!msg.io_completed() && !m_need_exit) {
+			err = read(msg, -1);
+			if (err) {
+				LOG(ERROR) << "worker: " << m_pid << ", read error: " << err << ", exiting";
+				exit(err);
+			}
 		}
 
 		message reply = callback(msg);
-		err = write(reply);
-		if (err) {
-			exit(err);
+		while (!reply.io_completed() && !m_need_exit) {
+			err = write(reply, -1);
+			if (err) {
+				LOG(ERROR) << "worker: " << m_pid << ", write error: " << err << ", exiting";
+				exit(err);
+			}
 		}
 	}
 }
 
-int worker::write_raw(const char *ptr, size_t size)
+void worker::io()
 {
-	io_scheduler send(m_epollfd, m_fd, EPOLLOUT);
+	int err = raw_io();
 
-	size_t written = 0;
-	while (written < size) {
-		if (!send.ready(-1)) {
-			return -ETIMEDOUT;
+	// there was an IO error, protocol is already broken,
+	// worker can not recover and should be restarted
+	if (err < 0) {
+		LOG(ERROR) << "worker: " << m_pid << ", IO error: " << err << ", killing itself";
+		kill(m_pid, SIGTERM);
+		return;
+	}
+}
+
+int worker::raw_io()
+{
+	long timeout = 100;
+	int err = 0;
+
+	while (!m_need_exit) {
+		std::unique_lock<std::mutex> lk(m_lock);
+		if (m_queue.empty()) {
+			if (!m_wait.wait_for(lk, std::chrono::milliseconds(100), [&] () {return m_queue.empty();}))
+				continue;
 		}
 
+		if (m_queue.empty()) {
+			continue;
+		}
+
+		auto p = std::move(m_queue.front());
+		m_queue.pop_front();
+		lk.unlock();
+
+		message &msg = p.first;
+		while (!msg.io_completed() && !m_need_exit) {
+			err = write(msg, timeout);
+			if (err < 0) {
+				message reply = message::copy_header(msg);
+				reply.header.status = err;
+				p.second(reply);
+				return err;
+			}
+		}
+
+		if (m_need_exit)
+			break;
+
+		// as soon as write completed we do not write next message to the worker,
+		// instead wait for reply
+		message reply;
+		while (!reply.io_completed() && !m_need_exit) {
+			err = read(reply, timeout);
+			if (err < 0) {
+				reply = message::copy_header(msg);
+				reply.header.status = err;
+				p.second(reply);
+				return err;
+			}
+		}
+		p.second(reply);
+	}
+
+	return 0;
+}
+
+ssize_t worker::write_raw(const char *ptr, size_t size)
+{
+	size_t written = 0;
+	while (written < size) {
 		ssize_t err = ::send(m_fd, ptr + written, size - written, 0);
 		if (err <= 0) {
 			err = -errno;
 			dprintf("write_raw: size: %ld, written: %ld, err: %ld\n", size, written, err);
+
+			if (err == -EAGAIN)
+				return written;
+
 			return err;
 		}
 
 		written += err;
 	}
 
-	return 0;
+	return written;
 }
-int worker::write(const message &msg)
+int worker::write(message &msg, long timeout)
 {
 	ssize_t err;
+	char *ptr;
 
-	err = write_raw((char *)&msg.header, msg.header_size);
+	io_scheduler send(m_epollfd, m_fd, EPOLLOUT);
+	if (!send.ready(timeout))
+		return 0;
+
+	if (msg.io_offset < msg.header_size) {
+		ptr = (char *)&msg.header;
+		ptr += msg.io_offset;
+		err = write_raw(ptr, msg.header_size - msg.io_offset);
+		if (err < 0)
+			return err;
+
+		msg.io_offset += err;
+	}
+
+	size_t data_offset = msg.io_offset - msg.header_size;
+	ptr = msg.data.get() + data_offset;
+	size_t size = msg.header.size - data_offset;
+	err = write_raw(ptr, size);
 	if (err < 0)
 		return err;
 
-	err = write_raw(msg.data.get(), msg.header.size);
-	if (err < 0)
-		return err;
-
+	msg.io_offset += err;
 	return 0;
 }
 
 
-int worker::read_raw(char *ptr, size_t size)
+ssize_t worker::read_raw(char *ptr, size_t size)
 {
 	size_t already_read = 0;
 	ssize_t err;
 
-	io_scheduler recv(m_epollfd, m_fd, EPOLLIN);
-
 	while (already_read < size) {
-		if (!recv.ready(-1)) {
-			return -ETIMEDOUT;
-		}
-
 		err = ::recv(m_fd, ptr + already_read, size - already_read, 0);
 		if (err <= 0) {
 			err = -errno;
 			dprintf("read_raw: size: %ld, read: %ld, err: %ld\n", size, already_read, err);
+
+			if (err == -EAGAIN)
+				return already_read;
+
 			return err;
 		}
 
 		already_read += err;
 	}
 
-	return 0;
+	return already_read;
 }
-int worker::read(message &msg)
+int worker::read(message &msg, long timeout)
 {
 	ssize_t err;
+	char *ptr;
 
-	err = read_raw((char *)&msg.header, msg.header_size);
+	io_scheduler recv(m_epollfd, m_fd, EPOLLIN);
+	if (!recv.ready(timeout))
+		return 0;
+
+	if (msg.io_offset < msg.header_size) {
+		ptr = (char *)&msg.header;
+		ptr += msg.io_offset;
+		err = read_raw(ptr, msg.header_size - msg.io_offset);
+		if (err < 0)
+			return err;
+
+		msg.io_offset += err;
+	}
+
+	if (!msg.data) {
+		msg.data.reset(new char[msg.header.size], array_deleter<char>());
+	}
+
+	size_t data_offset = msg.io_offset - msg.header_size;
+	ptr = msg.data.get() + data_offset;
+	size_t size = msg.header.size - data_offset;
+
+	err = read_raw(ptr, size);
 	if (err < 0)
 		return err;
 
-	msg.data.reset(new char[msg.header.size], array_deleter<char>());
-	err = read_raw(msg.data.get(), msg.header.size);
-	if (err < 0)
-		return err;
+	msg.io_offset += err;
 
 	dprintf("message read: cmd: %ld, size: %ld, data: %.*s\n",
 			msg.header.cmd, msg.header.size, (int)msg.header.size, msg.data.get());
@@ -328,13 +456,12 @@ controller::controller(int size, worker::callback_t callback)
 	: m_callback(callback)
 	, m_wait_thread(std::bind(&controller::wait_for_children, this))
 {
-	for (int i = 0; i < size; ++i) {
-		worker w;
-		m_workers.emplace_back(w);
-	}
+	m_workers.resize(size);
 
 	for (auto &w: m_workers) {
-		int err = w.start(callback);
+		w.reset(new worker());
+
+		int err = w->start(callback);
 		if (err < 0) {
 			std::ostringstream ss;
 			ss << "could not start new worker thread, error: " << strerror(-err) << " [" << err << "]";
@@ -349,33 +476,35 @@ controller::~controller()
 
 	for (auto &w: m_workers) {
 		int status;
-		w.stop(&status);
+		w->stop(&status);
 	}
 }
 
-void controller::schedule(const message &msg, completion_t complete)
+void controller::schedule(const message &msg, worker::completion_t complete)
 {
-	message reply = message::copy_header(msg);
-
+	std::unique_lock<std::mutex> guard(m_lock);
 	if (m_workers.empty()) {
+		guard.unlock();
+
+		message reply = message::copy_header(msg);
 		reply.header.status = -ENOENT;
 		complete(reply);
 		return;
 	}
 
-	worker &w = m_workers[rand() % m_workers.size()];
-	reply.header.status = w.write(msg);
-	if (reply.header.status < 0) {
-		complete(reply);
-		return;
+	int pos = 0;
+	size_t size = m_workers[pos]->queue_size();
+	for (size_t i = 0; i < m_workers.size(); ++i) {
+		auto &w = m_workers[i];
+
+		if (w->queue_size() < size) {
+			size = w->queue_size();
+			pos = i;
+		}
 	}
 
-	int err = w.read(reply);
-	if (reply.header.status == 0 && err != 0) {
-		reply.header.status = err;
-	}
-
-	complete(reply);
+	auto &w = m_workers[pos];
+	w->queue(msg, complete);
 }
 
 void controller::wait_for_children()
@@ -392,8 +521,8 @@ void controller::wait_for_children()
 				", killed-by-signal: " << WIFSIGNALED(status) <<
 					" (signal: " << WTERMSIG(status) << ", coredump: " << WCOREDUMP(status) << ")";
 
-			auto it = std::find_if(m_workers.begin(), m_workers.end(), [=] (const worker &w) {
-						return w.pid() == pid;
+			auto it = std::find_if(m_workers.begin(), m_workers.end(), [=] (const std::unique_ptr<worker> &w) {
+						return w->pid() == pid;
 					});
 			if (it == m_workers.end()) {
 				continue;
@@ -402,8 +531,8 @@ void controller::wait_for_children()
 			if (WIFEXITED(status) || WIFSIGNALED(status)) {
 				int err;
 
-				it->close();
-				err = it->start(m_callback);
+				(*it)->close();
+				err = (*it)->start(m_callback);
 				if (err < 0) {
 					LOG(ERROR) << "fpool::controller::wait_for_children: could not restart process: " <<
 						strerror(errno);
@@ -420,7 +549,7 @@ std::vector<pid_t> controller::pids() const {
 	std::vector<pid_t> ret;
 
 	for (auto &w: m_workers) {
-		ret.push_back(w.pid());
+		ret.push_back(w->pid());
 	}
 
 	return ret;

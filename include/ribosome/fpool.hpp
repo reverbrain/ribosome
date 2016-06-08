@@ -3,6 +3,7 @@
 #include <condition_variable>
 #include <memory>
 #include <sstream>
+#include <deque>
 #include <stdexcept>
 #include <thread>
 #include <vector>
@@ -33,7 +34,7 @@ struct message {
 	static const size_t header_size = sizeof(header);
 
 	std::shared_ptr<char> data;
-
+	size_t io_offset = 0;
 
 	message() {
 	}
@@ -50,6 +51,18 @@ struct message {
 		ret.header = other.header;
 		ret.header.size = 0;
 		return ret;
+	}
+
+	bool io_completed() const {
+		return io_offset == header_size + header.size;
+	}
+
+	std::string str() const {
+		std::ostringstream ss;
+		ss << "cmd: " << header.cmd <<
+			", id: " << header.id <<
+			", size: " << header.size;
+		return ss.str();
 	}
 };
 
@@ -69,6 +82,7 @@ private:
 class worker {
 public:
 	typedef std::function<message (const message &)> callback_t;
+	typedef std::function<void (const message &)> completion_t;
 
 	worker();
 	~worker();
@@ -79,10 +93,10 @@ public:
 
 	void close();
 
-	int write(const message &msg);
-	int read(message &msg);
-
 	pid_t pid() const;
+
+	size_t queue_size() const;
+	void queue(const message &msg, completion_t complete);
 
 private:
 	int m_fd = -1;
@@ -90,27 +104,39 @@ private:
 	pid_t m_pid = -1;
 	bool m_need_exit = false;
 
-	int read_raw(char *ptr, size_t size);
-	int write_raw(const char *ptr, size_t size);
+	std::mutex m_lock;
+	std::condition_variable m_wait;
+	std::deque<std::pair<message, completion_t>> m_queue;
 
+	std::unique_ptr<std::thread> m_io_thread;
+
+	ssize_t read_raw(char *ptr, size_t size);
+	ssize_t write_raw(const char *ptr, size_t size);
+
+	int write(message &msg, long timeout);
+	int read(message &msg, long timeout);
+
+	// runs in a forked child
 	void run(callback_t callback);
+
+	// runs in the IO thread
+	int raw_io();
+	void io();
 };
 
 class controller {
 public:
-	typedef std::function<void (const message &)> completion_t;
-
 	controller(int size, worker::callback_t callback);
 	~controller();
 
-	void schedule(const message &msg, completion_t complete);
+	void schedule(const message &msg, worker::completion_t complete);
 
 	std::vector<pid_t> pids() const;
 
 private:
-	std::vector<worker> m_workers;
+	std::mutex m_lock;
+	std::vector<std::unique_ptr<worker>> m_workers;
 	worker::callback_t m_callback;
-	std::condition_variable m_cv;
 
 	bool m_wait_need_exit = false;
 	std::thread m_wait_thread;
