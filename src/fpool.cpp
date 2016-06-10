@@ -14,6 +14,8 @@
 
 #include <glog/logging.h>
 
+//#define FPOLL_STDOUT_DEBUG
+
 #ifdef FPOOL_STDOUT_DEBUG
 #define dprintf(fmt, a...) printf(fmt, ##a)
 #else
@@ -31,8 +33,11 @@ io_scheduler::io_scheduler(int efd, int fd, uint32_t event) : m_efd(efd), m_fd(f
 	ev.data.fd = m_fd;
 	int err = epoll_ctl(m_efd, EPOLL_CTL_ADD, m_fd, &ev);
 	if (err < 0) {
+		err = -errno;
+
+		LOG(ERROR) << "could not add epoll event: " << strerror(-err);
 		std::ostringstream ss;
-		ss << "could not add epoll event: " << strerror(errno);
+		ss << "could not add epoll event: " << strerror(-err);
 		throw std::runtime_error(ss.str());
 	}
 }
@@ -45,31 +50,43 @@ io_scheduler::~io_scheduler()
 	epoll_ctl(m_efd, EPOLL_CTL_DEL, m_fd, &ev);
 }
 
-bool io_scheduler::ready(long timeout_ms)
+int io_scheduler::ready(long timeout_ms, epoll_event *ev)
 {
-	epoll_event ev;
 	ribosome::timer tm;
 
 	while (true) {
-		int nfds = epoll_wait(m_efd, &ev, 1, timeout_ms);
+		memset(ev, 0, sizeof(epoll_event));
+
+		int nfds = epoll_wait(m_efd, ev, 1, timeout_ms);
 		if (nfds < 0) {
-			std::ostringstream ss;
-			ss << "could not wait for epoll event: " << strerror(errno);
-			throw std::runtime_error(ss.str());
+			int err = -errno;
+			if (errno == EINTR)
+				continue;
+			if (errno == EAGAIN)
+				continue;
+
+			LOG(ERROR) << "could not wait for epoll event: " << strerror(-err);
+			return err;
 		}
 
 		if (nfds == 0)
-			return false;
+			return 0;
 
 		dprintf("%d: ready: efd: %d, fd: %d, events: %x, requested_event: %x\n",
 				getpid(),
-				m_efd, m_fd, ev.events, m_event);
-		if (ev.events & m_event)
-			return true;
+				m_efd, m_fd, ev->events, m_event);
+		if (ev->events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) {
+			printf("%d: ready: efd: %d, fd: %d, events: %x, requested_event: %x\n",
+					getpid(),
+					m_efd, m_fd, ev->events, m_event);
+		}
+
+		if (ev->events & m_event)
+			return 1;
 
 		timeout_ms -= tm.restart();
 		if (timeout_ms <= 0)
-			return false;
+			return -ETIMEDOUT;
 	}
 }
 
@@ -264,7 +281,11 @@ void worker::run(callback_t callback)
 			}
 		}
 
+		LOG(INFO) << "worker: " << m_pid << ": job: " << msg.str();
+
 		message reply = callback(msg);
+		LOG(INFO) << "worker: " << m_pid << ": job: " << msg.str() << " -> " << reply.str();
+
 		while (!reply.io_completed() && !m_need_exit) {
 			err = write(reply, -1);
 			if (err) {
@@ -296,15 +317,14 @@ int worker::raw_io()
 	while (!m_need_exit) {
 		std::unique_lock<std::mutex> lk(m_lock);
 		if (m_queue.empty()) {
-			if (!m_wait.wait_for(lk, std::chrono::milliseconds(100), [&] () {return m_queue.empty();}))
-				continue;
+			m_wait.wait_for(lk, std::chrono::milliseconds(100), [&] () {return !m_queue.empty();});
 		}
 
 		if (m_queue.empty()) {
 			continue;
 		}
 
-		auto p = std::move(m_queue.front());
+		std::pair<message, worker::completion_t> p(m_queue.front());
 		m_queue.pop_front();
 		lk.unlock();
 
@@ -334,7 +354,9 @@ int worker::raw_io()
 				return err;
 			}
 		}
+		LOG(INFO) << "going to call completion callback with reply: " << reply.str();
 		p.second(reply);
+		LOG(INFO) << "completed completion callback with reply: " << reply.str();
 	}
 
 	return 0;
@@ -347,7 +369,7 @@ ssize_t worker::write_raw(const char *ptr, size_t size)
 		ssize_t err = ::send(m_fd, ptr + written, size - written, 0);
 		if (err <= 0) {
 			err = -errno;
-			dprintf("write_raw: size: %ld, written: %ld, err: %ld\n", size, written, err);
+			printf("%d: write_raw: size: %ld, written: %ld, err: %ld\n", getpid(), size, written, err);
 
 			if (err == -EAGAIN)
 				return written;
@@ -364,9 +386,18 @@ int worker::write(message &msg, long timeout)
 {
 	ssize_t err;
 	char *ptr;
+	epoll_event ev;
 
 	io_scheduler send(m_epollfd, m_fd, EPOLLOUT);
-	if (!send.ready(timeout))
+	err = send.ready(timeout, &ev);
+	if (err < 0) {
+		if (ev.events & (EPOLLHUP | EPOLLERR))
+			return -EIO;
+
+		return err;
+	}
+
+	if (err == 0)
 		return 0;
 
 	if (msg.io_offset < msg.header_size) {
@@ -387,6 +418,7 @@ int worker::write(message &msg, long timeout)
 		return err;
 
 	msg.io_offset += err;
+
 	return 0;
 }
 
@@ -400,7 +432,10 @@ ssize_t worker::read_raw(char *ptr, size_t size)
 		err = ::recv(m_fd, ptr + already_read, size - already_read, 0);
 		if (err <= 0) {
 			err = -errno;
-			dprintf("read_raw: size: %ld, read: %ld, err: %ld\n", size, already_read, err);
+			printf("%d: read_raw: size: %ld, read: %ld, err: %ld\n", getpid(), size, already_read, err);
+
+			if (err == 0)
+				return -ECONNRESET;
 
 			if (err == -EAGAIN)
 				return already_read;
@@ -417,9 +452,18 @@ int worker::read(message &msg, long timeout)
 {
 	ssize_t err;
 	char *ptr;
+	epoll_event ev;
 
 	io_scheduler recv(m_epollfd, m_fd, EPOLLIN);
-	if (!recv.ready(timeout))
+	err = recv.ready(timeout, &ev);
+	if (err < 0) {
+		if (ev.events & (EPOLLHUP | EPOLLERR))
+			return -EIO;
+
+		return err;
+	}
+
+	if (err == 0)
 		return 0;
 
 	if (msg.io_offset < msg.header_size) {
@@ -446,8 +490,8 @@ int worker::read(message &msg, long timeout)
 
 	msg.io_offset += err;
 
-	dprintf("message read: cmd: %ld, size: %ld, data: %.*s\n",
-			msg.header.cmd, msg.header.size, (int)msg.header.size, msg.data.get());
+	dprintf("%d: message read: cmd: %d, size: %ld, data: %.*s\n",
+			getpid(), msg.header.cmd, msg.header.size, (int)msg.header.size, msg.data.get());
 	return 0;
 }
 
@@ -463,6 +507,8 @@ controller::controller(int size, worker::callback_t callback)
 
 		int err = w->start(callback);
 		if (err < 0) {
+			LOG(ERROR) << "could not start new worker thread, error: " << strerror(-err) << " [" << err << "]";
+
 			std::ostringstream ss;
 			ss << "could not start new worker thread, error: " << strerror(-err) << " [" << err << "]";
 			throw std::runtime_error(ss.str());

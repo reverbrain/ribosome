@@ -73,8 +73,8 @@ TEST_F(fpool_test, restart)
 	l.unlock();
 
 	kill(pid, SIGTERM);
+	sleep(1);
 
-	usleep(100000);
 	send_and_test(1);
 	pids = m_ctl.pids();
 	ASSERT_EQ(pids.size(), m_workers);

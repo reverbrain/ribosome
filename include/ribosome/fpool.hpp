@@ -8,6 +8,8 @@
 #include <thread>
 #include <vector>
 
+#include <sys/epoll.h>
+
 namespace ioremap { namespace ribosome { namespace fpool {
 
 template <typename T>
@@ -71,7 +73,7 @@ public:
 	io_scheduler(int efd, int fd, uint32_t event);
 	~io_scheduler();
 
-	bool ready(long timeout_ms);
+	int ready(long timeout_ms, epoll_event *ev);
 
 private:
 	int m_efd;
