@@ -1,6 +1,6 @@
 Summary:	Reverbrain core utility libraries
 Name:		ribosome
-Version:	0.2.11
+Version:	0.2.12
 Release:	1%{?dist}.1
 
 License:	Apachev2+
@@ -70,6 +70,9 @@ rm -rf %{buildroot}
 %{_libdir}/lib*.so*
 
 %changelog
+* Fri Jun 10 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.12
+- fpool: refactor ready() method, return error and event structure, added logs
+
 * Wed Jun 08 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.11
 - fpool: made schedule() method asynchronous
 - cmake: added ribosome library into exported list of libs
