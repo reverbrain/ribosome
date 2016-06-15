@@ -37,6 +37,18 @@ mark_as_advanced(INSTALL_LIB_DIR)
 
 option(WANT_GTEST "Disable if there is no way to download Google test suite" ON)
 
+include_directories(
+	${PROJECT_SOURCE_DIR}/include
+	${GLOG_INCLUDE_DIRS}
+	${ICU_INCLUDE_DIRS}
+	${EIGEN3_INCLUDE_DIRS}
+)
+
+link_directories(
+	${ICU_LIBRARY_DIRS}
+	${GLOG_LIBRARY_DIRS}
+)
+
 if (WANT_GTEST)
 	include(ExternalProject)
 	ExternalProject_Add(googletest
@@ -58,23 +70,12 @@ if (WANT_GTEST)
 	set_property(TARGET ${GTEST_LIBRARIES} PROPERTY IMPORTED_LOCATION ${GTEST_LIBRARY_PATH})
 	add_dependencies(${GTEST_LIBRARIES} googletest)
 
+	include_directories(${GTEST_INCLUDE_DIRS})
 	add_subdirectory(test)
 endif()
 
 
 
-include_directories(
-	${PROJECT_SOURCE_DIR}/include
-	${GTEST_INCLUDE_DIRS}
-	${GLOG_INCLUDE_DIRS}
-	${ICU_INCLUDE_DIRS}
-	${EIGEN3_INCLUDE_DIRS}
-)
-
-link_directories(
-	${ICU_LIBRARY_DIRS}
-	${GLOG_LIBRARY_DIRS}
-)
 
 add_subdirectory(src)
 
