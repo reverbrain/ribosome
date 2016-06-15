@@ -1,6 +1,6 @@
 Summary:	Reverbrain core utility libraries
 Name:		ribosome
-Version:	0.2.12
+Version:	0.2.13
 Release:	1%{?dist}.1
 
 License:	Apachev2+
@@ -70,6 +70,12 @@ rm -rf %{buildroot}
 %{_libdir}/lib*.so*
 
 %changelog
+* Wed Jun 15 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.13
+- fpool: use glog instead of plain printf()
+- fpool: speed up pool destruction
+- package: disable downloading and building gtests
+- file: added implementation of RAII classes for opened and mapped files
+
 * Fri Jun 10 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.12
 - fpool: refactor ready() method, return error and event structure, added logs
 

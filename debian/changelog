@@ -1,3 +1,12 @@
+ribosome (0.2.13) unstable; urgency=low
+
+  * fpool: use glog instead of plain printf()
+  * fpool: speed up pool destruction
+  * package: disable downloading and building gtests
+  * file: added implementation of RAII classes for opened and mapped files
+
+ -- Evgeniy Polyakov <zbr@ioremap.net>  Wed, 15 Jun 2016 16:11:11 +0400
+
 ribosome (0.2.12) unstable; urgency=low
 
   * fpool: refactor ready() method, return error and event structure, added logs
