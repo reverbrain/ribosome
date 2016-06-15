@@ -139,6 +139,11 @@ int worker::start(worker::callback_t callback)
 
 		m_pid = getpid();
 
+		sigset_t set;
+		sigemptyset(&set);
+		sigaddset(&set, SIGTERM);
+		sigprocmask(SIG_UNBLOCK, &set, NULL);
+
 		LOG(INFO) << "worker: " << m_pid << ", need_exit: " << m_need_exit << ": starting";
 		run(callback);
 		LOG(INFO) << "worker: " << m_pid << ": exiting";
@@ -182,13 +187,14 @@ void worker::close()
 
 int worker::stop(int *status)
 {
-	close();
+	m_need_exit = true;
 
 	if (m_pid < 0) {
 		*status = 0;
 		return 0;
 	}
 
+	LOG(INFO) << "fpool::worker::stop: sendig SIGTERM to pid " << m_pid;
 	int err = kill(m_pid, SIGTERM);
 	if (err < 0) {
 		err = -errno;
@@ -198,7 +204,7 @@ int worker::stop(int *status)
 	}
 
 	pid_t pid = 0;
-	for (int i = 0; i < 30; ++i) {
+	for (int i = 0; i < 10; ++i) {
 		pid = waitpid(m_pid, status, WNOHANG);
 		if (pid < 0) {
 			err = -errno;
@@ -211,10 +217,12 @@ int worker::stop(int *status)
 		if (pid > 0)
 			break;
 
-		usleep(30000);
+		usleep(10000);
 	}
 
 	if (pid == 0) {
+		LOG(ERROR) << "fpool::worker::stop: SIGTERM has been ignored, sending SIGKILL to pid " << m_pid;
+
 		err = kill(m_pid, SIGKILL);
 		if (err < 0) {
 			err = -errno;
@@ -232,6 +240,7 @@ int worker::stop(int *status)
 		}
 	}
 
+	close();
 	LOG(INFO) << "fpool::worker::stop: process " << m_pid << " has been stopped";
 	m_pid = -1;
 	return 0;
@@ -432,7 +441,7 @@ ssize_t worker::read_raw(char *ptr, size_t size)
 		err = ::recv(m_fd, ptr + already_read, size - already_read, 0);
 		if (err <= 0) {
 			err = -errno;
-			printf("%d: read_raw: size: %ld, read: %ld, err: %ld\n", getpid(), size, already_read, err);
+			printf("%d: read_raw: size: %ld, already_read: %ld, err: %ld\n", getpid(), size, already_read, err);
 
 			if (err == 0)
 				return -ECONNRESET;
@@ -474,6 +483,12 @@ int worker::read(message &msg, long timeout)
 			return err;
 
 		msg.io_offset += err;
+
+		if (err == 0 && (ev.events & (EPOLLHUP | EPOLLERR)))
+			return -EIO;
+
+		if (msg.io_offset != msg.header_size)
+			return 0;
 	}
 
 	if (!msg.data) {
@@ -492,6 +507,9 @@ int worker::read(message &msg, long timeout)
 
 	dprintf("%d: message read: cmd: %d, size: %ld, data: %.*s\n",
 			getpid(), msg.header.cmd, msg.header.size, (int)msg.header.size, msg.data.get());
+
+	if (err == 0 && (ev.events & (EPOLLHUP | EPOLLERR)))
+		return -EIO;
 	return 0;
 }
 
