@@ -42,7 +42,7 @@ needed for developing software which uses ribosome utils.
 %build
 export LDFLAGS="-Wl,-z,defs"
 export DESTDIR="%{buildroot}"
-%{cmake} .
+%{cmake} -DWANT_GTEST=OFF .
 make %{?_smp_mflags}
 
 %install
