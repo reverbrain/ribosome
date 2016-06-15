@@ -2,6 +2,7 @@
 #include "ribosome/timer.hpp"
 
 #include <algorithm>
+#include <iomanip>
 
 #include <sys/epoll.h>
 #include <sys/socket.h>
@@ -76,9 +77,11 @@ int io_scheduler::ready(long timeout_ms, epoll_event *ev)
 				getpid(),
 				m_efd, m_fd, ev->events, m_event);
 		if (ev->events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) {
-			printf("%d: ready: efd: %d, fd: %d, events: %x, requested_event: %x\n",
-					getpid(),
-					m_efd, m_fd, ev->events, m_event);
+			LOG(ERROR) << "ready: efd: " << m_efd <<
+				", fd: " << m_fd <<
+				std::hex << std::setfill('0') <<
+				", events: " << ev->events <<
+				", requested_event: " << m_event;
 		}
 
 		if (ev->events & m_event)
@@ -378,7 +381,9 @@ ssize_t worker::write_raw(const char *ptr, size_t size)
 		ssize_t err = ::send(m_fd, ptr + written, size - written, 0);
 		if (err <= 0) {
 			err = -errno;
-			printf("%d: write_raw: size: %ld, written: %ld, err: %ld\n", getpid(), size, written, err);
+			LOG(ERROR) << "write_raw: size: " << size <<
+				", written: " << written <<
+				", error: " << err;
 
 			if (err == -EAGAIN)
 				return written;
@@ -441,7 +446,10 @@ ssize_t worker::read_raw(char *ptr, size_t size)
 		err = ::recv(m_fd, ptr + already_read, size - already_read, 0);
 		if (err <= 0) {
 			err = -errno;
-			printf("%d: read_raw: size: %ld, already_read: %ld, err: %ld\n", getpid(), size, already_read, err);
+
+			LOG(ERROR) << "read_raw: size: " << size <<
+				", already_read: " << already_read <<
+				", error: " << err;
 
 			if (err == 0)
 				return -ECONNRESET;
