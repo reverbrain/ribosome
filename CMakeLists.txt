@@ -57,6 +57,8 @@ if (WANT_GTEST)
 	add_library(${GTEST_LIBRARIES} UNKNOWN IMPORTED)
 	set_property(TARGET ${GTEST_LIBRARIES} PROPERTY IMPORTED_LOCATION ${GTEST_LIBRARY_PATH})
 	add_dependencies(${GTEST_LIBRARIES} googletest)
+
+	add_subdirectory(test)
 endif()
 
 
@@ -75,7 +77,6 @@ link_directories(
 )
 
 add_subdirectory(src)
-add_subdirectory(test)
 
 FILE(GLOB headers
 	"${PROJECT_SOURCE_DIR}/include/ribosome/*.hpp"
