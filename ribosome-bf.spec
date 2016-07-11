@@ -1,6 +1,6 @@
 Summary:	Reverbrain core utility libraries
 Name:		ribosome
-Version:	0.2.13
+Version:	0.2.14
 Release:	1%{?dist}.1
 
 License:	Apachev2+
@@ -70,6 +70,9 @@ rm -rf %{buildroot}
 %{_libdir}/lib*.so*
 
 %changelog
+* Tue Jul 12 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.14
+- debian: split ribosome to devel and simple package, the latter contains libribosome.so and cmake file
+
 * Wed Jun 15 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.13
 - fpool: use glog instead of plain printf()
 - fpool: speed up pool destruction
