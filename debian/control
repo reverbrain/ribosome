@@ -13,8 +13,14 @@ Homepage: http://www.reverbrain.com/
 Vcs-Git: git://github.com/reverbrain/ribosome.git
 Vcs-Browser: https://github.com/reverbrain/ribosome
 
+Package: ribosome
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+ libglog-dev | libgoogle-glog-dev
+Description: Ribosome is a set of utility building blocks made at Reverbrain (libraries)
+
 Package: ribosome-dev
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libicu-dev, libeigen3-dev,
  libglog-dev | libgoogle-glog-dev
-Description: Ribosome is a set of utility building blocks made at Reverbrain
+Description: Ribosome is a set of utility building blocks made at Reverbrain (headers)
