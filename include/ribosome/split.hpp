@@ -26,7 +26,7 @@ public:
 		int prev = -1, pos;
 
 		UErrorCode err = U_ZERO_ERROR;
-		bi = ubrk_open(UBRK_WORD, NULL, uc.data(), uc.size(), &err);
+		bi = ubrk_open(UBRK_WORD, get_locale(), uc.data(), uc.size(), &err);
 		if (U_FAILURE(err))
 			return ret;
 

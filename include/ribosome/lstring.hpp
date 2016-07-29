@@ -32,6 +32,9 @@
 
 namespace ioremap { namespace ribosome {
 
+void set_locale(const char *l);
+char *get_locale();
+
 typedef UChar basic_letter;
 
 template <typename T>
@@ -215,9 +218,14 @@ class lconvert {
 		}
 
 		static std::string to_string(const lstring &l) {
-			std::ostringstream ss;
-			ss << l;
-			return ss.str();
+			std::string ret;
+			ret.resize(l.size() * 2 + 1);
+
+			int rs = 0;
+			UErrorCode err = U_ZERO_ERROR;
+			u_strToUTF8((char *)ret.data(), ret.size(), &rs, (const UChar *)l.data(), l.size(), &err);
+			ret.resize(rs);
+			return ret;
 		}
 
 		static lstring to_lower(const lstring &ls) {
@@ -225,7 +233,7 @@ class lconvert {
 			ret.resize(ls.size());
 
 			UErrorCode err = U_ZERO_ERROR;
-			u_strToLower((UChar *)ret.data(), ret.size(), (UChar *)ls.data(), ls.size(), NULL, &err);
+			u_strToLower((UChar *)ret.data(), ret.size(), (UChar *)ls.data(), ls.size(), get_locale(), &err);
 			return ret;
 		}
 
@@ -240,7 +248,7 @@ class lconvert {
 			lstring ls;
 			ls.resize(tmp.size());
 			UErrorCode err = U_ZERO_ERROR;
-			u_strToLower((UChar *)ls.data(), ls.size(), (UChar *)tmp.data(), tmp.size(), NULL, &err);
+			u_strToLower((UChar *)ls.data(), ls.size(), (UChar *)tmp.data(), tmp.size(), get_locale(), &err);
 
 			return to_string(ls);
 		}

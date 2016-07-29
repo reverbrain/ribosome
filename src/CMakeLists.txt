@@ -1,5 +1,6 @@
 add_library(ribosome SHARED
 	fpool.cpp
+	locale.cpp
 )
 target_link_libraries(ribosome
 	${Boost_LIBRARIES}
