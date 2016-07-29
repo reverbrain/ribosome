@@ -1,3 +1,11 @@
+ribosome (0.2.15) unstable; urgency=low
+
+  * lstring: added locale get/set helpers, use that locale when converting strings and splitting text
+  * lstring: convert string to utf8 and not into native codepage in to_string() method
+  * debian: updated rules to allow building multiple packages
+
+ -- Evgeniy Polyakov <zbr@ioremap.net>  Fri, 29 Jul 2016 16:07:19 +0400
+
 ribosome (0.2.14) unstable; urgency=low
 
   * debian: split ribosome to devel and simple package, the latter contains libribosome.so and cmake file

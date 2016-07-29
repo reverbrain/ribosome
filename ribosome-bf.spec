@@ -1,6 +1,6 @@
 Summary:	Reverbrain core utility libraries
 Name:		ribosome
-Version:	0.2.14
+Version:	0.2.15
 Release:	1%{?dist}.1
 
 License:	Apachev2+
@@ -70,6 +70,11 @@ rm -rf %{buildroot}
 %{_libdir}/lib*.so*
 
 %changelog
+* Fri Jul 29 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.15
+- lstring: added locale get/set helpers, use that locale when converting strings and splitting text
+- lstring: convert string to utf8 and not into native codepage in to_string() method
+- debian: updated rules to allow building multiple packages
+
 * Tue Jul 12 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.14
 - debian: split ribosome to devel and simple package, the latter contains libribosome.so and cmake file
 
