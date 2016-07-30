@@ -17,6 +17,7 @@ find_package(Threads REQUIRED)
 
 include(cmake/locate_library.cmake)
 LOCATE_LIBRARY(GLOG "glog/logging.h" "glog")
+LOCATE_LIBRARY(TIDY "tidy.h" "tidy")
 
 find_path(EIGEN3_INCLUDE_DIRS NAMES "signature_of_eigen3_matrix_library" PATH_SUFFIXES "eigen3")
 if (NOT EIGEN3_INCLUDE_DIRS)
@@ -42,11 +43,13 @@ include_directories(
 	${GLOG_INCLUDE_DIRS}
 	${ICU_INCLUDE_DIRS}
 	${EIGEN3_INCLUDE_DIRS}
+	${TIDY_INCLUDE_DIRS}
 )
 
 link_directories(
 	${ICU_LIBRARY_DIRS}
 	${GLOG_LIBRARY_DIRS}
+	${TIDY_LIBRARY_DIRS}
 )
 
 if (WANT_GTEST)
