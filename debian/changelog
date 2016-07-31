@@ -1,3 +1,10 @@
+ribosome (0.2.16) unstable; urgency=low
+
+  * Added libtidy-based HTML parser
+  * Added generic error class and helpers to create errors and exceptions
+
+ -- Evgeniy Polyakov <zbr@ioremap.net>  Sun, 31 Jul 2016 17:14:44 +0400
+
 ribosome (0.2.15) unstable; urgency=low
 
   * lstring: added locale get/set helpers, use that locale when converting strings and splitting text
