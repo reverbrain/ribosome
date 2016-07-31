@@ -1,4 +1,5 @@
 add_library(ribosome SHARED
+	exception.cpp
 	fpool.cpp
 	locale.cpp
 )
