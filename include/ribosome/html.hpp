@@ -40,24 +40,31 @@ public:
 		feed_text(ss.str());
 	}
 
-	void feed_text(const std::string &page) {
+	void feed_text(const char *data, size_t size) {
 		reset();
 
-		if (page.size() == 0)
+		if (size == 0)
 			return;
 
-		TidyBuffer errbuf;
 		TidyDoc tdoc = tidyCreate();
 
+		TidyBuffer errbuf, buf;
 		tidyBufInit(&errbuf);
+		tidyBufInit(&buf);
 
 		tidySetCharEncoding(tdoc, "raw");
 		tidyOptSetBool(tdoc, TidyXhtmlOut, yes);
 		tidySetErrorBuffer(tdoc, &errbuf);
 
-		int err = tidyParseString(tdoc, page.c_str());
+		tidyBufAttach(&buf, (byte *)data, size);
+
+		int err = tidyParseBuffer(tdoc, &buf);
 		if (err < 0) {
 			tidyBufFree(&errbuf);
+			tidyBufDetach(&buf);
+			tidyBufFree(&buf);
+			tidyRelease(tdoc);
+
 			std::ostringstream ss;
 			ss << "parser: failed to parse page: " << err;
 			throw std::runtime_error(ss.str());
@@ -65,8 +72,15 @@ public:
 
 		parse_doc(tdoc);
 
+		tidyBufDetach(&buf);
+		tidyBufFree(&buf);
 		tidyBufFree(&errbuf);
+
 		tidyRelease(tdoc);
+	}
+
+	void feed_text(const std::string &page) {
+		feed_text(page.c_str(), page.size());
 	}
 
 	const std::vector<std::string> &urls(void) const {
