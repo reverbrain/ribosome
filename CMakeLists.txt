@@ -84,6 +84,7 @@ add_subdirectory(src)
 
 FILE(GLOB headers
 	"${PROJECT_SOURCE_DIR}/include/ribosome/*.hpp"
+	"${PROJECT_SOURCE_DIR}/include/ribosome/*.h"
 )
 install(FILES "${PROJECT_BINARY_DIR}/cmake/RibosomeConfig.cmake" DESTINATION share/ribosome/cmake)
 install(FILES ${headers} DESTINATION include/ribosome)
