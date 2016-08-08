@@ -1,6 +1,6 @@
 Summary:	Reverbrain core utility libraries
 Name:		ribosome
-Version:	0.2.16
+Version:	0.2.17
 Release:	1%{?dist}.1
 
 License:	Apachev2+
@@ -70,6 +70,11 @@ rm -rf %{buildroot}
 %{_libdir}/lib*.so*
 
 %changelog
+* Mon Aug 08 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.17
+- rANS: range asymmetric numeral systems implementation, simple binary encoder/decoder
+- cmake: added hint for PATH_SUFFIX when locating tidy library
+- html: added feed_text() method which accepts data pointer and size
+
 * Sun Jul 31 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.16
 - Added libtidy-based HTML parser
 - Added generic error class and helpers to create errors and exceptions
