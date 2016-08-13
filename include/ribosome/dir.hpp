@@ -44,11 +44,16 @@ namespace ioremap { namespace ribosome {
 		fd = openat(AT_FDCWD, base.c_str(), O_RDONLY);
 		if (fd == -1) {
 			std::ostringstream ss;
-			ss << "failed to open dir '" << base << "': " << strerror(errno);
+			ss << "failed to open path '" << base << "': " << strerror(errno);
 			throw std::runtime_error(ss.str());
 		}
 
 		dir = fdopendir(fd);
+		if (!dir) {
+			std::ostringstream ss;
+			ss << "failed to open dir '" << base << "': " << strerror(errno);
+			throw std::runtime_error(ss.str());
+		}
 
 		try {
 			while ((d = readdir64(dir)) != NULL) {
