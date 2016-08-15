@@ -14,9 +14,11 @@ find_package(ICU REQUIRED COMPONENTS i18n io)
 set(CMAKE_EXE_LINKER_FLAGS -pthread)
 set(CMAKE_SHARED_LINKER_FLAGS -pthread)
 find_package(Threads REQUIRED)
+find_package(Boost REQUIRED program_options)
 
 include(cmake/locate_library.cmake)
 LOCATE_LIBRARY(GLOG "glog/logging.h" "glog")
+LOCATE_LIBRARY(MSGPACK "msgpack.hpp" "msgpack")
 LOCATE_LIBRARY(TIDY "tidy.h" "tidy" "tidy")
 
 find_path(EIGEN3_INCLUDE_DIRS NAMES "signature_of_eigen3_matrix_library" PATH_SUFFIXES "eigen3")
@@ -44,12 +46,6 @@ include_directories(
 	${ICU_INCLUDE_DIRS}
 	${EIGEN3_INCLUDE_DIRS}
 	${TIDY_INCLUDE_DIRS}
-)
-
-link_directories(
-	${ICU_LIBRARY_DIRS}
-	${GLOG_LIBRARY_DIRS}
-	${TIDY_LIBRARY_DIRS}
 )
 
 if (WANT_GTEST)

@@ -9,6 +9,8 @@
 
 #include <msgpack.hpp>
 
+#include <assert.h>
+
 namespace msgpack {
 static inline RansEncSymbol &operator >>(msgpack::object o, RansEncSymbol &renc)
 {
@@ -191,6 +193,12 @@ public:
 		for (int i=0; i < 256; i++) {
 			RansEncSymbolInit(&m_esyms[i], m_stats.cum_freqs[i], m_stats.freqs[i], m_prob_bits);
 			RansDecSymbolInit(&m_dsyms[i], m_stats.cum_freqs[i], m_stats.freqs[i]);
+
+#if 0
+			printf("%d/%d: enc: x_max: %u, rcp_freq: %u, bias: %u, cmpl_freq: %d, rcp_shift: %d\n",
+					i, 256, m_esyms[i].x_max, m_esyms[i].rcp_freq, m_esyms[i].bias,
+					m_esyms[i].cmpl_freq, m_esyms[i].rcp_shift);
+#endif
 		}
 
 		m_normalized = true;
@@ -214,6 +222,13 @@ public:
 					size, ss.str().c_str(), e.what());
 		}
 
+#if 0
+		for (int i=0; i < 256; i++) {
+			printf("%d/%d: enc: x_max: %u, rcp_freq: %u, bias: %u, cmpl_freq: %d, rcp_shift: %d\n",
+					i, 256, m_esyms[i].x_max, m_esyms[i].rcp_freq, m_esyms[i].bias,
+					m_esyms[i].cmpl_freq, m_esyms[i].rcp_shift);
+		}
+#endif
 		m_normalized = true;
 		return ribosome::error_info();
 	}
@@ -233,6 +248,11 @@ public:
 			size_t rev_pos = size - 1 - i;
 			uint8_t s = data[rev_pos];
 
+			long diff = ptr - ret->data();
+			if (diff < 0) {
+				return ribosome::create_error(-E2BIG, "%ld/%ld: ptr: %p, start: %p, diff: %ld, char: %d\n",
+						i, size, ptr, ret->data(), diff, s);
+			}
 			RansEncPutSymbol(&rans, &ptr, &m_esyms[s]);
 		}
 
