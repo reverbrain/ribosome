@@ -57,7 +57,7 @@ rm -f %{buildroot}%{_libdir}/*.la
 %clean
 rm -rf %{buildroot}
 
-#%files
+%files
 #%defattr(-,root,root,-)
 %{_bindir}/*
 #%{_libdir}/lib*.so.*
