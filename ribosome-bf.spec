@@ -59,7 +59,7 @@ rm -rf %{buildroot}
 
 #%files
 #%defattr(-,root,root,-)
-#%{_bindir}/*
+%{_bindir}/*
 #%{_libdir}/lib*.so.*
 
 
