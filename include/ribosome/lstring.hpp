@@ -183,20 +183,6 @@ class lconvert {
 			return ret;
 		}
 
-		static lstring from_string_encoding(const char *text, size_t size, const std::string &enc_hint) {
-			lstring ret;
-			ret.resize(size + 1);
-			size_t ret_size = ret.size();
-
-			charset ch;
-			ch.convert((UChar *)ret.data(), &ret_size, text, size, enc_hint);
-			ret.resize(ret_size);
-			return ret;
-		}
-		static lstring from_string_encoding(const char *text, size_t size) {
-			return from_string_encoding(text, size, std::string());
-		}
-
 		static lstring from_utf8(const char *text, size_t size) {
 			lstring ret;
 			ret.resize(size + 1);
@@ -242,7 +228,7 @@ class lconvert {
 			std::vector<UChar> tmp;
 			tmp.resize(size + 1);
 			size_t tmp_size = tmp.size();
-			ch.convert((UChar *)tmp.data(), &tmp_size, text, size, "");
+			ch.convert((UChar *)tmp.data(), &tmp_size, text, size);
 			tmp.resize(tmp_size);
 
 			lstring ls;
