@@ -1,6 +1,6 @@
 Summary:	Reverbrain core utility libraries
 Name:		ribosome
-Version:	0.2.17
+Version:	0.3.0
 Release:	1%{?dist}.1
 
 License:	Apachev2+
@@ -70,6 +70,12 @@ rm -rf %{buildroot}
 %{_libdir}/lib*.so*
 
 %changelog
+* Mon Aug 15 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.3.0
+- split: the last argument to convert_split_words() is an alphabet to split text on. This is additional to unicode word delimiters set.
+- charset: get rid of obscure encoding detection, it can only find utf8/latin and couple iso encodings, nothing similar to many russian or asian encodings
+- dir: throw exception if trying to open non-directory
+- rans: added example rans coder
+
 * Mon Aug 08 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.2.17
 - rANS: range asymmetric numeral systems implementation, simple binary encoder/decoder
 - cmake: added hint for PATH_SUFFIX when locating tidy library

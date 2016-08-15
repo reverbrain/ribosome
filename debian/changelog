@@ -1,3 +1,12 @@
+ribosome (0.3.0) unstable; urgency=low
+
+  * split: the last argument to convert_split_words() is an alphabet to split text on. This is additional to unicode word delimiters set.
+  * charset: get rid of obscure encoding detection, it can only find utf8/latin and couple iso encodings, nothing similar to many russian or asian encodings
+  * dir: throw exception if trying to open non-directory
+  * rans: added example rans coder
+
+ -- Evgeniy Polyakov <zbr@ioremap.net>  Mon, 15 Aug 2016 17:55:24 +0400
+
 ribosome (0.2.17) unstable; urgency=low
 
   * rANS: range asymmetric numeral systems implementation, simple binary encoder/decoder
