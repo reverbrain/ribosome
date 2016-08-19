@@ -239,6 +239,25 @@ class lconvert {
 		static std::string string_to_lower(const std::string &str) {
 			return string_to_lower(str.data(), str.size());
 		}
+
+		static lstring to_upper(const lstring &ls) {
+			lstring ret;
+			ret.resize(ls.size());
+
+			UErrorCode err = U_ZERO_ERROR;
+			u_strToUpper((UChar *)ret.data(), ret.size(), (UChar *)ls.data(), ls.size(), get_locale(), &err);
+			return ret;
+		}
+
+		static std::string string_to_upper(const char *text, size_t size) {
+			lstring ls = from_utf8(text, size);
+			lstring lower = to_upper(ls);
+			return to_string(lower);
+		}
+
+		static std::string string_to_upper(const std::string &str) {
+			return string_to_lower(str.data(), str.size());
+		}
 };
 
 }} // ioremap::ribosome

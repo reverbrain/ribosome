@@ -50,6 +50,8 @@ int main(int argc, char *argv[])
 	std::cout << ls << std::endl;
 	ls[7] = u'Й';
 	std::cout << ls << std::endl;
+	std::cout << "lower: " << lconvert::to_lower(ls) << std::endl;
+	std::cout << "upper: " << lconvert::to_upper(ls) << std::endl;
 
 	split spl;
 
