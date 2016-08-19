@@ -46,14 +46,14 @@ int main(int argc, char *argv[])
 		printf("%x %c\n", tmp[i], tmp[i]);
 	}
 #endif
-	lstring ls = lconvert::from_string_encoding(str.data(), str.size());
+	lstring ls = lconvert::from_utf8(str.data(), str.size());
 	std::cout << ls << std::endl;
 	ls[7] = u'Й';
 	std::cout << ls << std::endl;
 
 	split spl;
 
-	for (const auto &w: spl.convert_split_words(str.data(), str.size(), "")) {
+	for (const auto &w: spl.convert_split_words(ls, "")) {
 		std::cout << w << std::endl;
 	}
 
@@ -64,10 +64,10 @@ int main(int argc, char *argv[])
 		ss << in.rdbuf();
 		str = ss.str();
 	}
-	ls = lconvert::from_string_encoding(str.data(), str.size());
+	ls = lconvert::from_utf8(str.data(), str.size());
 	std::cout << ls << std::endl;
 
-	for (const auto &w: spl.convert_split_words(str.data(), str.size(), "")) {
+	for (const auto &w: spl.convert_split_words(ls, "")) {
 		std::cout << lconvert::to_lower(w) << std::endl;
 	}
 	return 0;

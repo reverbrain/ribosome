@@ -17,8 +17,6 @@
 #ifndef __RIBOSOME_LSTRING_HPP
 #define __RIBOSOME_LSTRING_HPP
 
-#include <ribosome/charset.hpp>
-
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -61,12 +59,21 @@ struct base_letter {
 	bool operator==(const base_letter &other) const {
 		return l == other.l;
 	}
+	bool operator!=(const base_letter &other) const {
+		return !operator==(other);
+	}
 	bool operator<(const base_letter &other) const {
 		return l < other.l;
 	}
-};
+} __attribute__ ((packed));
 
 typedef base_letter<basic_letter> letter;
+
+struct letter_hash {
+	unsigned long operator()(const letter &l) const {
+		return l.l;
+	}
+};
 
 inline std::ostream &operator <<(std::ostream &out, const letter &l)
 {
@@ -224,19 +231,9 @@ class lconvert {
 		}
 
 		static std::string string_to_lower(const char *text, size_t size) {
-			charset ch;
-			std::vector<UChar> tmp;
-			tmp.resize(size + 1);
-			size_t tmp_size = tmp.size();
-			ch.convert((UChar *)tmp.data(), &tmp_size, text, size);
-			tmp.resize(tmp_size);
-
-			lstring ls;
-			ls.resize(tmp.size());
-			UErrorCode err = U_ZERO_ERROR;
-			u_strToLower((UChar *)ls.data(), ls.size(), (UChar *)tmp.data(), tmp.size(), get_locale(), &err);
-
-			return to_string(ls);
+			lstring ls = from_utf8(text, size);
+			lstring lower = to_lower(ls);
+			return to_string(lower);
 		}
 
 		static std::string string_to_lower(const std::string &str) {
