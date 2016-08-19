@@ -1,3 +1,12 @@
+ribosome (0.3.1) unstable; urgency=low
+
+  * lstring: added to_upper() method
+  * Removed obscure icu charset detection
+  * split: use lstring when doing split
+  * package: added ribosome_rans_coder
+
+ -- Evgeniy Polyakov <zbr@ioremap.net>  Fri, 19 Aug 2016 18:34:14 +0400
+
 ribosome (0.3.0) unstable; urgency=low
 
   * split: the last argument to convert_split_words() is an alphabet to split text on. This is additional to unicode word delimiters set.

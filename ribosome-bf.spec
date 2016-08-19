@@ -1,6 +1,6 @@
 Summary:	Reverbrain core utility libraries
 Name:		ribosome
-Version:	0.3.0
+Version:	0.3.1
 Release:	1%{?dist}.1
 
 License:	Apachev2+
@@ -70,6 +70,12 @@ rm -rf %{buildroot}
 %{_libdir}/lib*.so*
 
 %changelog
+* Fri Aug 19 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.3.1
+- lstring: added to_upper() method
+- Removed obscure icu charset detection
+- split: use lstring when doing split
+- package: added ribosome_rans_coder
+
 * Mon Aug 15 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.3.0
 - split: the last argument to convert_split_words() is an alphabet to split text on. This is additional to unicode word delimiters set.
 - charset: get rid of obscure encoding detection, it can only find utf8/latin and couple iso encodings, nothing similar to many russian or asian encodings
