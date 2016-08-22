@@ -7,6 +7,7 @@ Build-Depends:
  debhelper (>= 7.0.50~),
  libicu-dev,
  libeigen3-dev,
+ libexpat-dev,
  libglog-dev | libgoogle-glog-dev,
  libtidy-dev
 Standards-Version: 3.8.0
@@ -25,6 +26,7 @@ Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
  libicu-dev,
  libeigen3-dev,
+ libexpat-dev,
  libglog-dev | libgoogle-glog-dev,
  libtidy-dev
 Description: Ribosome is a set of utility building blocks made at Reverbrain (headers)
