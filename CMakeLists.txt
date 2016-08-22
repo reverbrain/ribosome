@@ -17,6 +17,7 @@ find_package(Threads REQUIRED)
 find_package(Boost REQUIRED program_options)
 
 include(cmake/locate_library.cmake)
+LOCATE_LIBRARY(EXPAT "expat.h" "expat")
 LOCATE_LIBRARY(GLOG "glog/logging.h" "glog")
 LOCATE_LIBRARY(MSGPACK "msgpack.hpp" "msgpack")
 LOCATE_LIBRARY(TIDY "tidy.h" "tidy" "tidy")
@@ -42,9 +43,10 @@ option(WANT_GTEST "Disable if there is no way to download Google test suite" ON)
 
 include_directories(
 	${PROJECT_SOURCE_DIR}/include
+	${EIGEN3_INCLUDE_DIRS}
+	${EXPAT_INCLUDE_DIRS}
 	${GLOG_INCLUDE_DIRS}
 	${ICU_INCLUDE_DIRS}
-	${EIGEN3_INCLUDE_DIRS}
 	${TIDY_INCLUDE_DIRS}
 )
 
