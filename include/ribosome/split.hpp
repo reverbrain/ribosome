@@ -27,7 +27,7 @@ public:
 
 			bool changed = false;
 			static letter space(' ');
-			for (size_t i = 0; i < copy.size(); ++i) {
+			for (size_t i = 0; i < lt.size(); ++i) {
 				auto it = m.find(lt[i]);
 				if (it != m.end()) {
 					if (!changed) {
