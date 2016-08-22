@@ -10,7 +10,7 @@ using namespace ioremap::ribosome;
 
 int main(int argc, char *argv[])
 {
-	std::string str("это такой...test,.' नमस्ते");
+	std::string str("это такой...test,.' नमस्ते www.example.com aaa:bbb:ccc::ddd");
 
 	std::cout << "string: " << str << std::endl;
 
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 
 	split spl;
 
-	for (const auto &w: spl.convert_split_words(ls, "")) {
+	for (const auto &w: spl.convert_split_words(ls, ".:")) {
 		std::cout << w << std::endl;
 	}
 
