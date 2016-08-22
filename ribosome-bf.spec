@@ -1,6 +1,6 @@
 Summary:	Reverbrain core utility libraries
 Name:		ribosome
-Version:	0.3.1
+Version:	0.3.2
 Release:	1%{?dist}.1
 
 License:	Apachev2+
@@ -70,6 +70,12 @@ rm -rf %{buildroot}
 %{_libdir}/lib*.so*
 
 %changelog
+* Mon Aug 22 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.3.2
+- icu: added drop symbols test
+- split: fixed drop symbols processing
+- package: added expat into dependencies
+- Added xml parser
+
 * Fri Aug 19 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.3.1
 - lstring: added to_upper() method
 - Removed obscure icu charset detection
