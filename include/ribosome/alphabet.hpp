@@ -28,7 +28,7 @@ public:
 			return true;
 
 		for (auto ch: lw) {
-			if (ok(ch)) {
+			if (!ok(ch)) {
 				return false;
 			}
 		}
