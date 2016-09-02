@@ -83,8 +83,18 @@ public:
 		feed_text(page.c_str(), page.size());
 	}
 
-	const std::vector<std::string> &urls(void) const {
-		return m_urls;
+	const std::vector<std::string> urls(void) const {
+		std::vector<std::string> ret;
+		ret.insert(ret.end(), m_links.begin(), m_links.end());
+		ret.insert(ret.end(), m_images.begin(), m_images.end());
+		return ret;
+	}
+
+	const std::vector<std::string> &links(void) const {
+		return m_links;
+	}
+	const std::vector<std::string> &images(void) const {
+		return m_images;
 	}
 
 	const std::vector<std::string> &tokens(void) const {
@@ -99,11 +109,12 @@ public:
 	}
 
 private:
-	std::vector<std::string> m_urls;
+	std::vector<std::string> m_links, m_images;
 	std::vector<std::string> m_tokens;
 
 	void reset(void) {
-		m_urls.clear();
+		m_links.clear();
+		m_images.clear();
 		m_tokens.clear();
 	}
 
@@ -111,18 +122,21 @@ private:
 		traverse_tree(tdoc, tidyGetRoot(tdoc));
 	}
 
-	void get_url(TidyAttr attr) {
+	std::string get_url(TidyAttr attr) {
 		if (attr) {
 			ctmbstr value = tidyAttrValue(attr);
 			if (value) {
-				m_urls.emplace_back(std::string(value));
+				return std::string(value);
 			}
 		}
+
+		return std::string();
 	}
 
 	void traverse_tree(TidyDoc tdoc, TidyNode tnode) {
 		TidyNode child;
 		TidyBuffer buf;
+		std::string url;
 
 		for (child = tidyGetChild(tnode); child; child = tidyGetNext(child)) {
 			bool inside_ignored = false;
@@ -150,12 +164,14 @@ private:
 							inside_ignored = true;
 							break;
 						case TidyTag_A:
-							get_url(tidyAttrGetById(child, TidyAttr_HREF));
+							url = get_url(tidyAttrGetById(child, TidyAttr_HREF));
+							m_links.push_back(url);
 							break;
 
 						case TidyTag_IFRAME:
 						case TidyTag_IMG:
-							get_url(tidyAttrGetById(child, TidyAttr_SRC));
+							url = get_url(tidyAttrGetById(child, TidyAttr_SRC));
+							m_images.push_back(url);
 							break;
 						default:
 							break;
