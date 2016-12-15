@@ -202,6 +202,7 @@ private:
 			}
 		}
 
+		std::unique_lock<std::mutex> guard(m_lock);
 		m_completed = true;
 		m_wait.notify_all();
 	}
