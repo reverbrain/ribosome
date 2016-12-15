@@ -1,6 +1,6 @@
 Summary:	Reverbrain core utility libraries
 Name:		ribosome
-Version:	0.3.2
+Version:	0.3.3
 Release:	1%{?dist}.1
 
 License:	Apachev2+
@@ -70,6 +70,14 @@ rm -rf %{buildroot}
 %{_libdir}/lib*.so*
 
 %changelog
+* Thu Dec 15 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.3.3
+- timer: added elapsed_seconds() helper which returns float number of seconds and timer test
+- expiration: when completing processing thread, protect completion status flag setting to fix the race with stop() method
+- html: export links/images separately
+- alphabet: fixed string check
+- split: added allow/drop alphabets to be used when splitting string
+- alphabet: added alphabet implementation
+
 * Mon Aug 22 2016 Evgeniy Polyakov <zbr@ioremap.net> - 0.3.2
 - icu: added drop symbols test
 - split: fixed drop symbols processing

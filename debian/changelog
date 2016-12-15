@@ -1,3 +1,14 @@
+ribosome (0.3.3) unstable; urgency=low
+
+  * timer: added elapsed_seconds() helper which returns float number of seconds and timer test
+  * expiration: when completing processing thread, protect completion status flag setting to fix the race with stop() method
+  * html: export links/images separately
+  * alphabet: fixed string check
+  * split: added allow/drop alphabets to be used when splitting string
+  * alphabet: added alphabet implementation
+
+ -- Evgeniy Polyakov <zbr@ioremap.net>  Thu, 15 Dec 2016 18:33:16 +0400
+
 ribosome (0.3.2) unstable; urgency=low
 
   * icu: added drop symbols test
