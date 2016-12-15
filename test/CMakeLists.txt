@@ -19,3 +19,11 @@ target_link_libraries(ribosome_test_icu
 	${ICU_LIBRARIES}
 	ribosome
 )
+
+add_executable(ribosome_test_timer timer.cpp)
+target_link_libraries(ribosome_test_timer
+	${GLOG_LIBRARIES}
+	${GTEST_LIBRARIES}
+	${ICU_LIBRARIES}
+	ribosome
+)

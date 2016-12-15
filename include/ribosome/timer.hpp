@@ -18,6 +18,7 @@
 #define __RIBOSOME_TIMER_HPP
 
 #include <chrono>
+#include <utility>
 
 namespace ioremap { namespace ribosome {
 
@@ -29,8 +30,7 @@ public:
 	{
 	}
 
-	int64_t elapsed() const
-	{
+	int64_t elapsed() const {
 		int64_t t = std::chrono::duration_cast<std::chrono::milliseconds>(clock::now() - m_last_time).count();
 		if (!t)
 			t = 1;
@@ -38,8 +38,11 @@ public:
 		return t;
 	}
 
-	int64_t restart()
-	{
+	float elapsed_seconds() const {
+		return std::chrono::duration<float, std::ratio<1, 1>>(clock::now() - m_last_time).count();
+	}
+
+	int64_t restart() {
 		clock::time_point time = clock::now();
 		std::swap(m_last_time, time);
 		int64_t t = std::chrono::duration_cast<std::chrono::milliseconds>(m_last_time - time).count();
